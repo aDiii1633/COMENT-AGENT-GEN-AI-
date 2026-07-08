@@ -1,21 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Layers, Search, LayoutGrid, Tag, Code2, MessageSquare } from 'lucide-react';
+import { ArrowRight, Layers, Users, Map, FileText, Database, Award } from 'lucide-react';
 
 const agents = [
-  { name: 'Research', icon: Search, color: 'text-teal-500', bg: 'bg-teal-50', border: 'border-teal-100' },
-  { name: 'Strategy', icon: LayoutGrid, color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-100' },
-  { name: 'Content', icon: Tag, color: 'text-rose-500', bg: 'bg-rose-50', border: 'border-rose-100' },
-  { name: 'Development', icon: Code2, color: 'text-sky-500', bg: 'bg-sky-50', border: 'border-sky-100' },
-  { name: 'Pitch', icon: MessageSquare, color: 'text-pink-500', bg: 'bg-pink-50', border: 'border-pink-100' },
+  { name: 'Citizen Insights', icon: Users, color: 'text-teal-500', bg: 'bg-teal-50', border: 'border-teal-100' },
+  { name: 'Dev Planning', icon: Map, color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-100' },
+  { name: 'Communication', icon: FileText, color: 'text-rose-500', bg: 'bg-rose-50', border: 'border-rose-100' },
+  { name: 'Public Data', icon: Database, color: 'text-sky-500', bg: 'bg-sky-50', border: 'border-sky-100' },
+  { name: 'Recommendation', icon: Award, color: 'text-pink-500', bg: 'bg-pink-50', border: 'border-pink-100' },
 ];
 const agentWords = [
-  'Research Agent',
-  'Strategy Agent',
-  'Content Agent',
-  'Development Agent',
-  'Pitch Agent'
+  'Citizen Insights Agent',
+  'Development Planning Agent',
+  'Communication Agent',
+  'Public Data Agent',
+  'Recommendation Agent'
 ];
 
 export default function LandingPage() {
@@ -37,7 +37,7 @@ export default function LandingPage() {
           <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-md shadow-primary/20">
             <Layers className="w-5 h-5 text-white" />
           </div>
-          <span className="text-lg font-bold text-dark">Comet Agent</span>
+          <span className="text-lg font-bold text-dark">COMET Civic Intelligence</span>
         </div>
         <div className="flex items-center gap-4">
           <button className="text-sm text-slate-600 hover:text-dark transition-colors font-medium">Sign In</button>
@@ -45,7 +45,7 @@ export default function LandingPage() {
             onClick={() => navigate('/dashboard')}
             className="px-5 py-2.5 bg-dark text-white text-sm font-medium rounded-full hover:bg-slate-800 transition-colors"
           >
-            Start Building
+            Launch Platform
           </button>
         </div>
       </nav>
@@ -59,11 +59,11 @@ export default function LandingPage() {
         >
           <div className="inline-flex items-center gap-2 px-5 py-2 bg-primary-50 border border-primary-100 rounded-full mb-10">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-            <span className="text-xs font-semibold text-primary uppercase tracking-wider">Next-Gen Business Creation</span>
+            <span className="text-xs font-semibold text-primary uppercase tracking-wider">AI-Powered Civic Intelligence</span>
           </div>
 
           <h1 className="text-5xl md:text-6xl font-extrabold leading-[1.15] mb-8 tracking-tight">
-            Your AI Workforce for
+            Transform Citizen Voices with
             <br />
             <span className="relative inline-block w-full h-[1.2em] overflow-hidden mt-2">
               <AnimatePresence mode="popLayout">
@@ -98,13 +98,11 @@ export default function LandingPage() {
 
           <p className="text-slate-500 text-base leading-relaxed mb-2 max-w-xl mx-auto">
             <span className="font-semibold text-dark">Problem:</span>{' '}
-            Creators, founders, and indie hackers switch between multiple tools
-            for research, strategy, content, development, and pitching.
+            Members of Parliament juggle complaints, data, and development decisions across fragmented systems.
           </p>
           <p className="text-slate-500 text-base leading-relaxed mb-12 max-w-xl mx-auto">
             <span className="font-semibold text-primary">Solution:</span>{' '}
-            Comet Agent unifies everything through specialized AI agents and
-            powerful orchestration.
+            COMET Civic Intelligence unifies citizen voice processing, public data analysis, and development planning through specialized AI agents.
           </p>
 
           <div className="flex items-center justify-center gap-4">
@@ -112,7 +110,7 @@ export default function LandingPage() {
               onClick={() => navigate('/dashboard')}
               className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary text-white font-semibold rounded-full hover:bg-primary-700 transition-all shadow-lg shadow-primary/25 text-sm"
             >
-              Start Building <ArrowRight className="w-4 h-4" />
+              Launch Platform <ArrowRight className="w-4 h-4" />
             </button>
             <button
               onClick={() => navigate('/dashboard')}

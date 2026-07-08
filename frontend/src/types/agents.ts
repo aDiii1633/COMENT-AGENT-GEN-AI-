@@ -19,151 +19,121 @@ export interface AIPrompt {
   prompt: string;
 }
 
-// 1. Research Agent
-export interface Competitor {
-  company: string;
-  strength: string;
-  weakness?: string;
-  position: string;
+// 1. Citizen Insights Agent (was Research Agent)
+export interface RecurringTheme {
+  theme: string;
+  frequency: string;
+  affectedArea: string;
 }
 
-export interface ResearchOutput {
+export interface CitizenInsightsOutput {
   executiveSummary: string;
-  marketPotential: string;
-  competitionLevel: 'Low' | 'Medium' | 'High';
-  opportunityScore: number;
-  topCompetitors: Competitor[];
-  marketSizeData?: { label: string; value: number }[]; // optional, for the donut chart
-  marketTrends?: string[];
-  targetDemographics?: string[];
+  issueSeverity: string;
+  urgencyLevel: 'Low' | 'Medium' | 'High';
+  citizenSatisfaction: number;
+  topThemes: RecurringTheme[];
+  complaintCategories?: { label: string; value: number }[];
+  recurringIssues?: string[];
+  affectedDemographics?: string[];
   keyRisks?: string[];
   detailedReport?: string;
   deliverables?: Deliverable[];
 }
 
-// 2. Strategy Agent
-export interface StrategyOutput {
-  businessName: string;
-  tagline: string;
-  uniqueSellingProposition: string;
-  customers: string[];
-  value: string[];
-  channels: string[];
-  revenue: string[];
+// 2. Development Planning Agent (was Strategy Agent)
+export interface DevelopmentPlanningOutput {
+  districtName: string;
+  visionStatement: string;
+  keyObjective: string;
+  infrastructureGaps: string[];
+  proposedProjects: string[];
+  implementationChannels: string[];
+  budgetAllocation: string[];
   keyMilestones?: string[];
-  marketingTactics?: string[];
+  priorityActions?: string[];
   detailedReport?: string;
   deliverables?: Deliverable[];
 }
 
-// 3. Content Agent
-export interface ContentIdea {
-  caption: string;
-  hook: string;
-  cta: string;
-  hashtags: string[];
-  imagePrompt?: string;
-  thumbnailPrompt?: string;
+// 3. Communication Agent (was Content Agent)
+export interface CommunicationEntry {
+  title: string;
+  body: string;
+  audience: string;
+  language: string;
+  urgencyTag?: string;
+  tags?: string[];
   charCount?: number;
   score?: number;
-  emojiVersion?: string;
-  professionalVersion?: string;
-  casualVersion?: string;
-  longCaption?: string;
-  shortCaption?: string;
-  carouselContent?: string[];
-  storyContent?: string;
-  reelScript?: string;
-  videoDescription?: string;
-  seoTitle?: string;
-  seoDescription?: string;
-  keywords?: string[];
-  altText?: string;
-  thumbnailIdea?: string;
-  trendingAngle?: string;
-  postingTimeSuggestion?: string;
-  audienceType?: string;
-  contentCalendarSuggestion?: string;
-  repurposeSuggestions?: string[];
-  
-  // Exact names requested by user
-  hooks?: string[];
-  postingTime?: string;
-  targetAudience?: string;
-  carousel?: string[];
-  story?: string;
-  reel?: string;
+  keyMessage?: string;
+  actionRequired?: string;
+  formalVersion?: string;
+  simplifiedVersion?: string;
+  hindiTranslation?: string;
+  regionalTranslation?: string;
 }
 
-export interface PlatformContent {
-  platform: string;
-  ideas: ContentIdea[];
-  seoScore?: number;
-  postingTime?: string;
-  engagementPrediction?: string;
+export interface ChannelContent {
+  channel: string;
+  entries: CommunicationEntry[];
 }
 
-export interface ContentOutput {
+export interface CommunicationOutput {
   executiveSummary: string;
-  platforms: PlatformContent[];
+  channels: ChannelContent[];
   detailedReport?: string;
   deliverables?: Deliverable[];
 }
 
-// 4. Development Agent
-export interface RecommendedStackItem {
+// 4. Public Data Intelligence Agent (was Development Agent)
+export interface DataSourceItem {
   name: string;
   description: string;
   url?: string;
 }
 
-export interface DevelopmentOutput {
-  htmlGeneratorText: string;
-  architectureDescription: string;
-  recommendedStack: RecommendedStackItem[];
-  htmlPrototype?: string;
-  folderStructure?: string;
-  howToRun?: string;
-  installation?: string;
-  dependencies?: string;
-  technologyStack?: string;
-  frontendExplanation?: string;
-  backendExplanation?: string;
-  databaseExplanation?: string;
-  deploymentGuide?: string;
-  githubSetup?: string;
-  hostingOptions?: string;
-  performanceTips?: string;
-  optimizationTips?: string;
-  securitySuggestions?: string;
-  alternativeManualDevelopmentGuide?: string;
-  usefulDocumentationLinks?: string[];
-  officialResources?: string[];
-  learningResources?: string[];
+export interface PublicDataIntelligenceOutput {
+  dataOverview: string;
+  infrastructureAnalysis: string;
+  dataSources: DataSourceItem[];
+  demographicBreakdown?: string;
+  schoolsAnalysis?: string;
+  roadsAnalysis?: string;
+  hospitalsAnalysis?: string;
+  populationInsights?: string;
+  waterSupplyAnalysis?: string;
+  electricityAnalysis?: string;
+  geoMappingData?: string;
+  sanitationAnalysis?: string;
+  connectivityAnalysis?: string;
+  budgetUtilization?: string;
+  governmentSchemes?: string;
   detailedReport?: string;
   deliverables?: Deliverable[];
 }
 
-// 5. Pitch Agent
-export interface PitchSlide {
-  title: string;
-  content: string;
-  keyMetric?: string;
-  keyMetricLabel?: string;
-  speakerNotes: string;
+// 5. Recommendation Agent (was Pitch Agent)
+export interface Recommendation {
+  projectName: string;
+  priorityScore: string;
+  budgetEstimate?: string;
+  budgetEstimateLabel?: string;
+  impactSummary: string;
+  implementationNotes: string;
+  urgencyLabel?: string;
 }
 
-export interface PitchOutput {
+export interface RecommendationOutput {
   executiveSummary: string;
-  slides: PitchSlide[];
+  recommendations: Recommendation[];
   detailedReport?: string;
   deliverables?: Deliverable[];
 }
 
 // Union Type
 export type AgentOutputData = 
-  | ResearchOutput 
-  | StrategyOutput 
-  | ContentOutput 
-  | DevelopmentOutput 
-  | PitchOutput;
+  | CitizenInsightsOutput 
+  | DevelopmentPlanningOutput 
+  | CommunicationOutput 
+  | PublicDataIntelligenceOutput 
+  | RecommendationOutput;

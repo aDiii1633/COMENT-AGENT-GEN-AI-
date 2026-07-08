@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, LayoutGrid, Tag, Code2, MessageSquare, Send, ArrowRight, Loader2 } from 'lucide-react';
+import { Users, Map, FileText, Database, Award, Send, ArrowRight, Loader2 } from 'lucide-react';
 import { generateAgentResponse } from '../utils/llm';
 
 interface AgentData {
@@ -18,51 +18,51 @@ interface AgentData {
 const agentMap: Record<string, AgentData> = {
   research: {
     id: 'research',
-    name: 'Research Agent',
-    icon: Search,
-    description: 'Dedicated workspace for specialized AI tasks.',
-    capabilities: ['Competitor Analysis', 'Market Research', 'Industry Trends', 'Audience Research'],
-    prompts: ['Analyze my competitors', 'Find market opportunities', 'Research industry trends'],
+    name: 'Citizen Insights Agent',
+    icon: Users,
+    description: 'Analyze citizen complaints, cluster feedback, and identify recurring themes.',
+    capabilities: ['Complaint Clustering', 'Theme Detection', 'Sentiment Analysis', 'Recurring Issue Identification'],
+    prompts: ['Analyze citizen complaints from Ward 3', 'Identify top recurring issues', 'Summarize citizen feedback trends'],
     color: 'text-sky-500',
     bg: 'bg-sky-50',
   },
   strategy: {
     id: 'strategy',
-    name: 'Strategy Agent',
-    icon: LayoutGrid,
-    description: 'Build strategic frameworks and business models.',
-    capabilities: ['Business Model Canvas', 'Pricing Strategy', 'Go-to-Market Plan', 'SWOT Analysis'],
-    prompts: ['Create a pricing model', 'Draft a GTM strategy', 'Build a lean canvas'],
+    name: 'Development Planning Agent',
+    icon: Map,
+    description: 'Analyze infrastructure gaps and generate development priorities.',
+    capabilities: ['Infrastructure Gap Analysis', 'Project Prioritization', 'District Planning', 'Budget Estimation'],
+    prompts: ['Identify infrastructure gaps in the district', 'Prioritize road repair projects', 'Create a development timeline'],
     color: 'text-blue-500',
     bg: 'bg-blue-50',
   },
   content: {
     id: 'content',
-    name: 'Content Agent',
-    icon: Tag,
-    description: 'Generate marketing and brand content.',
-    capabilities: ['Copywriting', 'Social Media Posts', 'Blog Content', 'Email Campaigns'],
-    prompts: ['Write landing page copy', 'Create social media posts', 'Draft email sequences'],
+    name: 'Communication Agent',
+    icon: FileText,
+    description: 'Generate multilingual public notices and government communications.',
+    capabilities: ['Public Notices', 'Press Releases', 'Ward Updates', 'Government Reports'],
+    prompts: ['Draft a public notice for road construction', 'Create a ward development update', 'Write a meeting summary'],
     color: 'text-rose-500',
     bg: 'bg-rose-50',
   },
   development: {
     id: 'development',
-    name: 'Development Agent',
-    icon: Code2,
-    description: 'Architecture planning and code generation.',
-    capabilities: ['Tech Stack Selection', 'Database Schema', 'API Design', 'Code Generation'],
-    prompts: ['Design the database schema', 'Plan the API architecture', 'Generate boilerplate code'],
+    name: 'Public Data Intelligence Agent',
+    icon: Database,
+    description: 'Analyze government datasets, demographics, and public infrastructure.',
+    capabilities: ['Demographics Analysis', 'Schools & Roads Data', 'Population Insights', 'Geo Mapping'],
+    prompts: ['Analyze population distribution data', 'Map infrastructure availability', 'Correlate demographics with complaints'],
     color: 'text-emerald-500',
     bg: 'bg-emerald-50',
   },
   pitch: {
     id: 'pitch',
-    name: 'Pitch Agent',
-    icon: MessageSquare,
-    description: 'Create investor-ready pitch materials.',
-    capabilities: ['Pitch Deck', 'Elevator Pitch', 'Financial Projections', 'Investor Brief'],
-    prompts: ['Build a pitch deck', 'Write an elevator pitch', 'Create financial projections'],
+    name: 'Recommendation Agent',
+    icon: Award,
+    description: 'Generate ranked project recommendations and MP development reports.',
+    capabilities: ['Priority Scoring', 'Budget Estimation', 'MP Action Report', 'Project Ranking'],
+    prompts: ['Rank development projects by priority', 'Generate an MP development report', 'Create budget suggestions'],
     color: 'text-purple-500',
     bg: 'bg-purple-50',
   },
@@ -91,7 +91,7 @@ export default function AgentPlayground({ selectedAgent }: Props) {
       const result = await generateAgentResponse(agent.id, userMsg);
       const data = result.data as Record<string, unknown>;
       // Extract a readable summary from the structured output
-      const summary = (data?.executiveSummary as string) || (data?.projectOverview as string) || JSON.stringify(data, null, 2);
+      const summary = (data?.executiveSummary as string) || (data?.dataOverview as string) || JSON.stringify(data, null, 2);
       const prefix = result.success ? '' : '⚠️ (Sample data) ';
       setMessages((prev) => [
         ...prev,
@@ -231,7 +231,7 @@ export default function AgentPlayground({ selectedAgent }: Props) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={loading}
-              placeholder={loading ? 'Please wait for response...' : `Ask ${agent.name} to do something...`}
+              placeholder={loading ? 'Please wait for response...' : `Ask ${agent.name} to analyze...`}
               className="flex-1 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 bg-transparent outline-none disabled:cursor-not-allowed"
             />
             <button

@@ -1,13 +1,13 @@
 import { Lightbulb, Activity, Target, TrendingUp } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import type { ResearchOutput } from '../../types/agents';
+import type { CitizenInsightsOutput } from '../../types/agents';
 
-interface ResearchWorkspaceProps {
+interface CitizenInsightsWorkspaceProps {
   data: Record<string, unknown>;
 }
 
-export default function ResearchWorkspace({ data }: ResearchWorkspaceProps) {
-  const output = data as unknown as ResearchOutput;
+export default function CitizenInsightsWorkspace({ data }: CitizenInsightsWorkspaceProps) {
+  const output = data as unknown as CitizenInsightsOutput;
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
@@ -15,72 +15,72 @@ export default function ResearchWorkspace({ data }: ResearchWorkspaceProps) {
       {/* Executive Summary Card */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
         <h2 className="text-sm font-bold text-sky-700 uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Lightbulb className="w-4 h-4" /> Executive Summary
+          <Lightbulb className="w-4 h-4" /> Citizen Feedback Summary
         </h2>
         <div className="prose prose-slate max-w-none">
           <p className="text-lg leading-relaxed text-slate-700">
-            {output.executiveSummary || "Market research analysis completed."}
+            {output.executiveSummary || "Citizen complaint analysis completed."}
           </p>
         </div>
       </div>
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Market Potential */}
+        {/* Issue Severity */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col">
           <div className="flex items-center gap-2 mb-4 text-sky-600 font-semibold">
             <Activity className="w-5 h-5" />
-            Market Potential
+            Issue Severity
           </div>
           <p className="text-sm text-slate-600 leading-relaxed flex-1">
-            {output.marketPotential || "Demand remains robust across all segments."}
+            {output.issueSeverity || "Analysis of complaint severity and impact across wards."}
           </p>
         </div>
 
-        {/* Competition */}
+        {/* Urgency Level */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col">
           <div className="flex items-center gap-2 mb-4 text-purple-600 font-semibold">
             <Target className="w-5 h-5" />
-            Competition
+            Urgency Level
           </div>
           <div className="flex-1 flex items-center">
             <span className={`px-4 py-1.5 rounded-full text-sm font-bold ${
-              output.competitionLevel === 'High' ? 'bg-red-50 text-red-600' :
-              output.competitionLevel === 'Medium' ? 'bg-yellow-50 text-yellow-600' :
+              output.urgencyLevel === 'High' ? 'bg-red-50 text-red-600' :
+              output.urgencyLevel === 'Medium' ? 'bg-yellow-50 text-yellow-600' :
               'bg-green-50 text-green-600'
             }`}>
-              {output.competitionLevel || 'High'}
+              {output.urgencyLevel || 'High'}
             </span>
           </div>
         </div>
 
-        {/* Opportunity Score */}
+        {/* Citizen Satisfaction Score */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col">
           <div className="flex items-center gap-2 mb-4 text-emerald-600 font-semibold">
             <TrendingUp className="w-5 h-5" />
-            Opportunity Score
+            Citizen Satisfaction
           </div>
           <div className="flex-1 flex flex-col justify-center">
             <div className="flex items-baseline gap-2 mb-2">
-              <span className="text-4xl font-extrabold text-slate-900">{output.opportunityScore || 68}</span>
+              <span className="text-4xl font-extrabold text-slate-900">{output.citizenSatisfaction || 34}</span>
               <span className="text-sm font-medium text-slate-400">/100</span>
             </div>
             <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-emerald-500 rounded-full" 
-                style={{ width: `${output.opportunityScore || 68}%` }}
+                style={{ width: `${output.citizenSatisfaction || 34}%` }}
               />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom Grid: Market Size & Competitors */}
+      {/* Bottom Grid: Complaint Distribution & Recurring Themes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* Market Size Analysis (Placeholder Donut) */}
+        {/* Complaint Distribution (Donut Chart) */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <h3 className="text-lg font-bold text-slate-900 mb-6">Market Size Analysis</h3>
+          <h3 className="text-lg font-bold text-slate-900 mb-6">Complaint Distribution</h3>
           <div className="aspect-square max-w-[280px] mx-auto relative flex items-center justify-center">
              <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
                <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f1f5f9" strokeWidth="16" />
@@ -94,35 +94,35 @@ export default function ResearchWorkspace({ data }: ResearchWorkspaceProps) {
                />
              </svg>
              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-               <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Total Addressable</span>
-               <span className="text-2xl font-bold text-slate-900">$4.2B</span>
+               <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Total Complaints</span>
+               <span className="text-2xl font-bold text-slate-900">342</span>
              </div>
           </div>
         </div>
 
-        {/* Top Competitors Table */}
+        {/* Top Recurring Themes Table */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 overflow-hidden flex flex-col">
-          <h3 className="text-lg font-bold text-slate-900 mb-6">Top Competitors</h3>
+          <h3 className="text-lg font-bold text-slate-900 mb-6">Top Recurring Themes</h3>
           <div className="overflow-x-auto flex-1">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-100">
-                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Company</th>
-                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Strength</th>
-                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Position</th>
+                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Theme</th>
+                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Frequency</th>
+                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Affected Area</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {output.topCompetitors?.map((comp, idx) => (
+                {output.topThemes?.map((theme, idx) => (
                   <tr key={idx} className="group">
                     <td className="py-4 pr-4 font-semibold text-slate-900 align-top">
-                      {comp.company}
+                      {theme.theme}
                     </td>
                     <td className="py-4 pr-4 text-sm text-slate-600 align-top">
-                      {comp.strength}
+                      {theme.frequency}
                     </td>
                     <td className="py-4 text-sm text-sky-600 font-medium align-top">
-                      {comp.position}
+                      {theme.affectedArea}
                     </td>
                   </tr>
                 ))}
@@ -133,35 +133,35 @@ export default function ResearchWorkspace({ data }: ResearchWorkspaceProps) {
 
       </div>
 
-      {/* NEW SECTION: Deep Research Data */}
-      {(output.marketTrends || output.targetDemographics || output.keyRisks) && (
+      {/* Deep Data Section */}
+      {(output.recurringIssues || output.affectedDemographics || output.keyRisks) && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
           
-          {/* Trends */}
-          {output.marketTrends && (
+          {/* Recurring Issues */}
+          {output.recurringIssues && (
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
               <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-indigo-500" /> Key Market Trends
+                <TrendingUp className="w-5 h-5 text-indigo-500" /> Recurring Issues
               </h3>
               <ul className="space-y-3">
-                {output.marketTrends.map((trend, i) => (
+                {output.recurringIssues.map((issue, i) => (
                   <li key={i} className="text-sm text-slate-600 flex items-start gap-2">
                     <span className="text-indigo-400 mt-1">•</span>
-                    <span>{trend}</span>
+                    <span>{issue}</span>
                   </li>
                 ))}
               </ul>
             </div>
           )}
 
-          {/* Demographics */}
-          {output.targetDemographics && (
+          {/* Affected Demographics */}
+          {output.affectedDemographics && (
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
               <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Target className="w-5 h-5 text-pink-500" /> Target Demographics
+                <Target className="w-5 h-5 text-pink-500" /> Affected Demographics
               </h3>
               <ul className="space-y-3">
-                {output.targetDemographics.map((demo, i) => (
+                {output.affectedDemographics.map((demo, i) => (
                   <li key={i} className="text-sm text-slate-600 flex items-start gap-2">
                     <span className="text-pink-400 mt-1">•</span>
                     <span>{demo}</span>
@@ -191,12 +191,12 @@ export default function ResearchWorkspace({ data }: ResearchWorkspaceProps) {
         </div>
       )}
 
-      {/* NEW SECTION: Deep Dive Report */}
+      {/* Deep Dive Report */}
       {output.detailedReport && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 mt-8">
           <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4">
             <TrendingUp className="w-6 h-6 text-indigo-500" />
-            <h3 className="text-2xl font-bold text-slate-900">Comprehensive Research Report</h3>
+            <h3 className="text-2xl font-bold text-slate-900">Comprehensive Citizen Insights Report</h3>
           </div>
           <div className="prose prose-slate max-w-none prose-headings:text-indigo-900 prose-a:text-indigo-600">
             <ReactMarkdown>{output.detailedReport}</ReactMarkdown>

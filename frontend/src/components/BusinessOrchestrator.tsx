@@ -2,7 +2,7 @@ import type { ComponentType } from 'react';
 import { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Sparkles, ArrowRight, Play, Search, LayoutGrid, Tag, Code2, MessageSquare,
+  Sparkles, ArrowRight, Play, Users, Map, FileText, Database, Award,
   Check, Loader2, RefreshCw, AlertTriangle, Eye, ChevronRight,
 } from 'lucide-react';
 import { generateAgentResponse } from '../utils/llm';
@@ -21,11 +21,11 @@ interface AgentCard {
 }
 
 const agents: AgentCard[] = [
-  { id: 'research', name: 'Research Agent', icon: Search, color: 'text-sky-500', bg: 'bg-sky-50', gradient: 'from-sky-500 to-blue-600' },
-  { id: 'strategy', name: 'Strategy Agent', icon: LayoutGrid, color: 'text-blue-500', bg: 'bg-blue-50', gradient: 'from-blue-500 to-indigo-600' },
-  { id: 'content', name: 'Content Agent', icon: Tag, color: 'text-rose-500', bg: 'bg-rose-50', gradient: 'from-rose-500 to-pink-600' },
-  { id: 'development', name: 'Development Agent', icon: Code2, color: 'text-emerald-500', bg: 'bg-emerald-50', gradient: 'from-emerald-500 to-teal-600' },
-  { id: 'pitch', name: 'Pitch Agent', icon: MessageSquare, color: 'text-purple-500', bg: 'bg-purple-50', gradient: 'from-purple-500 to-violet-600' },
+  { id: 'research', name: 'Citizen Insights', icon: Users, color: 'text-sky-500', bg: 'bg-sky-50', gradient: 'from-sky-500 to-blue-600' },
+  { id: 'strategy', name: 'Dev Planning', icon: Map, color: 'text-blue-500', bg: 'bg-blue-50', gradient: 'from-blue-500 to-indigo-600' },
+  { id: 'content', name: 'Communication', icon: FileText, color: 'text-rose-500', bg: 'bg-rose-50', gradient: 'from-rose-500 to-pink-600' },
+  { id: 'development', name: 'Public Data', icon: Database, color: 'text-emerald-500', bg: 'bg-emerald-50', gradient: 'from-emerald-500 to-teal-600' },
+  { id: 'pitch', name: 'Recommendation', icon: Award, color: 'text-purple-500', bg: 'bg-purple-50', gradient: 'from-purple-500 to-violet-600' },
 ];
 
 // ─── Status Labels ──────────────────────────────────────────
@@ -87,7 +87,7 @@ export default function BusinessOrchestrator({
     setErrorMessages(prev => { const next = { ...prev }; delete next[agentId]; return next; });
 
     try {
-      const prompt = `Generate comprehensive business deliverables for: "${goalText}"`;
+      const prompt = `Generate comprehensive civic intelligence for: "${goalText}"`;
       const result = await generateAgentResponse(agentId, prompt, context);
 
       // Store in cache + state
@@ -175,13 +175,13 @@ export default function BusinessOrchestrator({
       {/* ── Goal Input Card ── */}
       <div className="bg-white rounded-xl border border-slate-100 p-5 shadow-sm shrink-0">
         <label className="text-xs font-bold text-slate-400 uppercase tracking-[0.15em] block mb-3">
-          What is your business goal?
+          Describe the civic issue or development need
         </label>
         <textarea
           value={goal}
           onChange={e => setGoal(e.target.value)}
           disabled={orchestratorStatus === 'running'}
-          placeholder="e.g., I want to launch a fitness app for busy professionals"
+          placeholder="e.g., Analyze road repair complaints in Ward 5 and recommend priority projects"
           rows={2}
           className="w-full p-3.5 bg-white rounded-xl border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 outline-none focus:border-primary-400 focus:ring-4 focus:ring-primary-50 resize-none transition-all disabled:opacity-60"
         />
@@ -205,7 +205,7 @@ export default function BusinessOrchestrator({
             {orchestratorStatus === 'running' ? (
               <><Loader2 className="w-4.5 h-4.5 animate-spin" /> Generating...</>
             ) : (
-              <><Sparkles className="w-4.5 h-4.5" /> Generate Outputs <ArrowRight className="w-4 h-4" /></>
+              <><Sparkles className="w-4.5 h-4.5" /> Analyze & Recommend <ArrowRight className="w-4 h-4" /></>
             )}
           </button>
         </div>
@@ -251,7 +251,7 @@ export default function BusinessOrchestrator({
       {/* ── Agent Cards Grid ── */}
       <div className="flex-1 min-h-0 flex flex-col">
         <div className="flex items-center justify-between mb-4 px-1 shrink-0">
-          <h3 className="text-xl font-bold text-slate-800">Agent Output Panel</h3>
+          <h3 className="text-xl font-bold text-slate-800">Agent Intelligence Panel</h3>
           <div className="bg-slate-100 px-3 py-1 rounded-full">
             <span className="text-xs text-slate-500 font-medium">
               {selectedAgents.size} of {agents.length} selected

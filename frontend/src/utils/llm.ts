@@ -1,5 +1,5 @@
 // ============================================================
-// COMET Agent V2 — LLM Engine with Retry, Timeout & Validation
+// COMET Civic Intelligence — LLM Engine with Retry, Timeout & Validation
 // ============================================================
 
 import type {
@@ -22,139 +22,118 @@ const RETRY_BASE_DELAY_MS = 1500;
 
 // ===== Agent-Specific System Prompts =====
 
-const RESEARCH_PROMPT = `You are the COMET Research Agent. Generate a highly simplified Market Intelligence report using simple, beginner-friendly terms (NO complex business jargon like TAM/SAM/SOM or SWOT). Explain everything as if to a beginner.
+const CITIZEN_INSIGHTS_PROMPT = `You are the COMET Citizen Insights Agent. You analyze citizen complaints, cluster feedback, identify recurring themes, and summarize submissions for Members of Parliament.
 You MUST respond with ONLY a valid JSON object (no markdown fences, no explanation). Match this exact structure:
 {
-  "executiveSummary": "Opening a local gym presents a consistent market opportunity driven by...",
-  "marketPotential": "The demand for health and fitness services remains robust...",
-  "competitionLevel": "High",
-  "opportunityScore": 68,
-  "topCompetitors": [
-    { "company": "Budget Chain Gym", "strength": "Low membership cost...", "position": "Mass market..." }
+  "executiveSummary": "Ward 5 has received 342 citizen complaints over the past quarter, with road infrastructure and water supply being the dominant themes...",
+  "issueSeverity": "Road infrastructure degradation affects 68% of reported complaints, with 12 villages reporting impassable conditions during monsoon...",
+  "urgencyLevel": "High",
+  "citizenSatisfaction": 34,
+  "topThemes": [
+    { "theme": "Road Repair", "frequency": "142 complaints", "affectedArea": "Ward 5, 7, 12" }
   ],
-  "marketSizeData": [{ "label": "Segment A", "value": 40 }, { "label": "Segment B", "value": 60 }],
-  "marketTrends": ["Trend 1 with detailed explanation", "Trend 2...", "Trend 3...", "Trend 4...", "Trend 5..."],
-  "targetDemographics": ["Demographic 1: highly specific details", "Demographic 2...", "Demographic 3..."],
-  "keyRisks": ["Risk 1: detailed mitigation strategy", "Risk 2..."],
-  "detailedReport": "# Complete Market Research Report\\n\\n## Introduction\\n..."
+  "complaintCategories": [{ "label": "Roads", "value": 40 }, { "label": "Water", "value": 30 }, { "label": "Schools", "value": 30 }],
+  "recurringIssues": ["Issue 1 with detailed explanation", "Issue 2...", "Issue 3...", "Issue 4...", "Issue 5..."],
+  "affectedDemographics": ["Demographic 1: highly specific details", "Demographic 2...", "Demographic 3..."],
+  "keyRisks": ["Risk 1: detailed mitigation strategy", "Risk 2...", "Risk 3..."],
+  "detailedReport": "# Comprehensive Citizen Insights Report\\n\\n## Introduction\\n..."
 }
-Generate highly detailed, exhaustive specific data based on the user's business goal. Generate at least 5 competitors, 5 trends, 3 demographics, and 3 risks.
-CRITICAL: You MUST include a 'detailedReport' string containing a massive, expert-level 1000+ word deep-dive report formatted in Markdown, structured into these sections: Introduction, Overview, Best Practices, Common Mistakes, Advanced Tips, Professional Examples, Real-world Use Cases, Step-by-step Guide, Checklist, Summary, Resources, Next Steps, FAQs, Expert Recommendations. Do NOT use placeholder text or summarize sections. Write everything out in full.`;
+Generate highly detailed, exhaustive data based on the user's civic query. Generate at least 5 themes, 5 recurring issues, 3 demographics, and 3 risks.
+CRITICAL: You MUST include a 'detailedReport' string containing a massive, expert-level 1000+ word deep-dive report formatted in Markdown, structured into: Introduction, Complaint Analysis, Theme Clustering, Demographic Impact, Severity Assessment, Trend Analysis, Ward-wise Breakdown, Risk Factors, Recommendations, Action Items, Summary. Write everything out in full.`;
 
-const STRATEGY_PROMPT = `You are the COMET Strategy Agent. Generate a highly simplified Business Strategy using simple, beginner-friendly terms (NO complex business jargon like Lean Canvas, KPI, or Customer Segments). Explain everything simply.
+const DEVELOPMENT_PLANNING_PROMPT = `You are the COMET Development Planning Agent. You analyze infrastructure gaps, compare development proposals, generate implementation priorities, and recommend district planning for MPs.
 You MUST respond with ONLY a valid JSON object (no markdown fences). Match this exact structure:
 {
-  "businessName": "Anchor Wellness Collective",
-  "tagline": "Your Local Hub for Holistic Health & Connection.",
-  "uniqueSellingProposition": "A supportive, community-driven wellness hub offering holistic fitness...",
-  "customers": ["Detailed Profile 1...", "Profile 2...", "Profile 3...", "Profile 4...", "Profile 5...", "Profile 6..."],
-  "value": ["Strong value proposition 1...", "Value 2...", "Value 3...", "Value 4...", "Value 5...", "Value 6..."],
-  "channels": ["Specific Channel 1...", "Channel 2...", "Channel 3...", "Channel 4...", "Channel 5...", "Channel 6..."],
-  "revenue": ["Revenue Stream 1...", "Stream 2...", "Stream 3...", "Stream 4...", "Stream 5..."],
+  "districtName": "Prakasam District Development Plan",
+  "visionStatement": "Transform rural infrastructure through data-driven prioritization and citizen-centric development.",
+  "keyObjective": "Address critical infrastructure gaps in roads, water supply, and healthcare facilities across 15 wards by prioritizing high-impact, citizen-demanded projects within available budget allocations.",
+  "infrastructureGaps": ["Detailed Gap 1...", "Gap 2...", "Gap 3...", "Gap 4...", "Gap 5...", "Gap 6..."],
+  "proposedProjects": ["Project 1...", "Project 2...", "Project 3...", "Project 4...", "Project 5...", "Project 6..."],
+  "implementationChannels": ["Channel 1...", "Channel 2...", "Channel 3...", "Channel 4...", "Channel 5...", "Channel 6..."],
+  "budgetAllocation": ["Allocation 1...", "Allocation 2...", "Allocation 3...", "Allocation 4...", "Allocation 5..."],
   "keyMilestones": ["Month 1: specific goal", "Month 3: specific goal", "Month 6...", "Year 1..."],
-  "marketingTactics": ["Tactic 1: highly detailed execution plan", "Tactic 2...", "Tactic 3..."],
-  "detailedReport": "# Complete Strategy Report\\n\\n## Overview\\n..."
+  "priorityActions": ["Action 1: detailed execution plan", "Action 2...", "Action 3...", "Action 4...", "Action 5..."],
+  "detailedReport": "# Comprehensive Development Plan\\n\\n## Overview\\n..."
 }
-Generate exhaustive, highly detailed data based on the user's business goal. Generate at least 6 items for customers, value, and channels arrays. Generate 4+ milestones and 5+ tactics.
-CRITICAL: You MUST include a 'detailedReport' string containing a massive, expert-level 1000+ word deep-dive report formatted in Markdown covering Business Strategy, Execution Roadmap, KPIs, Timeline, Risks, Budget, Growth Strategy, Best Practices, Common Mistakes, Step-by-step Guide, Checklist, Summary, Next Steps, FAQs, Expert Recommendations. Write everything out in full, no summary or placeholders.`;
+Generate exhaustive, highly detailed data based on the user's civic development query. Generate at least 6 items for gaps, projects, and channels.
+CRITICAL: You MUST include a 'detailedReport' string containing a massive, expert-level 1000+ word deep-dive report formatted in Markdown covering Development Strategy, Infrastructure Assessment, Budget Framework, Implementation Timeline, Risk Mitigation, Stakeholder Engagement, Monitoring & Evaluation, Ward Priorities, Summary, Next Steps. Write everything out in full.`;
 
-const CONTENT_PROMPT = `You are the COMET Content Agent. Generate marketing content for multiple platforms, providing exactly 3 distinct content ideas for each platform.
+const COMMUNICATION_PROMPT = `You are the COMET Communication Agent. You generate multilingual public notices, citizen announcements, social media updates, government reports, press releases, ward updates, and meeting summaries for MPs.
 You MUST respond with ONLY a valid JSON object (no markdown fences). Match this exact structure:
 {
-  "executiveSummary": "2-3 sentence content strategy summary",
-  "platforms": [
+  "executiveSummary": "2-3 sentence communication strategy summary for civic engagement",
+  "channels": [
     {
-      "platform": "LinkedIn",
-      "ideas": [
+      "channel": "Public Notice",
+      "entries": [
         {
-          "caption": "Full caption text with emojis",
-          "hook": "Attention-grabbing first line",
-          "hooks": ["Hook variation 1", "Hook variation 2"],
-          "cta": "Call to action",
-          "hashtags": ["#hashtag1", "#hashtag2"],
-          "seoTitle": "...",
-          "seoDescription": "...",
-          "keywords": ["...", "..."],
-          "postingTime": "...",
-          "targetAudience": "...",
-          "carousel": ["slide 1 text", "slide 2 text"],
-          "story": "...",
-          "reel": "...",
-          "longCaption": "...",
-          "shortCaption": "...",
-          "thumbnailIdea": "...",
-          "videoDescription": "...",
+          "title": "Notice title",
+          "body": "Full notice text",
+          "audience": "Target audience",
+          "language": "English",
+          "urgencyTag": "High",
+          "tags": ["#RoadRepair", "#Ward5"],
+          "keyMessage": "Core message to communicate",
+          "actionRequired": "What citizens should do",
+          "formalVersion": "Formal government-style version",
+          "simplifiedVersion": "Simple citizen-friendly version",
           "charCount": 235,
           "score": 88
         }
       ]
     }
   ],
-  "detailedReport": "# Complete Content Strategy Report\\n\\n## Overview\\n..."
+  "detailedReport": "# Comprehensive Communication Plan\\n\\n## Overview\\n..."
 }
-Generate content for ALL of these platforms: Instagram, Facebook, Threads, X, Pinterest, Reddit, YouTube, YouTube Shorts, TikTok, Medium, Substack, Telegram, Discord, WhatsApp Channel, Blog, Email Newsletter.
-Each platform object MUST have exactly 5 objects in the "ideas" array filled with deeply researched, highly engaging, long-form content. Include all specified caption variations and SEO data.
-For every single platform, you MUST generate: Hooks, Captions, Hashtags, CTA, SEO Title, SEO Description, Keywords, Posting Time, Target Audience, Carousel, Story, Reel, Long Caption, Short Caption, Thumbnail Idea, Video Description. Do not use placeholders or generic samples.
-CRITICAL: You MUST include a 'detailedReport' string containing a massive, expert-level 1000+ word deep-dive report formatted in Markdown, including a Content Calendar Suggestion, Repurpose Suggestions, and Best Practices.`;
+Generate communications for ALL of these channels: Public Notice, Press Release, Social Media Post, Ward Update, Meeting Summary, Government Report, Citizen Advisory, SMS Alert.
+Each channel MUST have exactly 3 entries with deeply detailed, context-specific content.
+CRITICAL: You MUST include a 'detailedReport' string containing a massive, expert-level 1000+ word deep-dive report formatted in Markdown, including Communication Calendar, Translation Guidelines, Accessibility Plan, and Distribution Strategy.`;
 
-const DEVELOPMENT_PROMPT = `You are the COMET Development Agent. Generate a complete technical workspace, including a single-file HTML prototype and manual setup instructions using Lovable and Supabase.
+const PUBLIC_DATA_PROMPT = `You are the COMET Public Data Intelligence Agent. You analyze government datasets including demographics, schools, roads, hospitals, population data, and public infrastructure, then merge findings with citizen requests to generate actionable insights.
 You MUST respond with ONLY a valid JSON object (no markdown fences). Match this exact structure:
 {
-  "htmlGeneratorText": "Your HTML landing page has been generated and is ready to download.",
-  "architectureDescription": "The Anchor Wellness Collective digital platform will be a modern, community-focused web application designed to manage memberships...",
-  "recommendedStack": [
-    { "name": "Lovable", "description": "UI Builder / Design System", "url": "https://lovable.dev" },
-    { "name": "Supabase", "description": "Database & Backend-as-a-Service (BaaS)", "url": "https://supabase.com" }
+  "dataOverview": "Analysis of 14 government datasets covering infrastructure, demographics, and public services across the district...",
+  "infrastructureAnalysis": "The district has 847 km of roads, of which 34% are in poor condition...",
+  "dataSources": [
+    { "name": "Census India", "description": "Population & Demographics", "url": "https://censusindia.gov.in" },
+    { "name": "Data.gov.in", "description": "Open Government Data Platform", "url": "https://data.gov.in" }
   ],
-  "htmlPrototype": "<!DOCTYPE html><html>...</html>",
-  "folderStructure": "src/\\n  components/\\n...",
-  "howToRun": "npm start...",
-  "installation": "npm install...",
-  "dependencies": "React, Tailwind...",
-  "technologyStack": "...",
-  "frontendExplanation": "...",
-  "backendExplanation": "...",
-  "databaseExplanation": "...",
-  "deploymentGuide": "...",
-  "githubSetup": "...",
-  "hostingOptions": "...",
-  "performanceTips": "...",
-  "optimizationTips": "...",
-  "securitySuggestions": "...",
-  "alternativeManualDevelopmentGuide": "...",
-  "detailedReport": "# Complete Development Guide\n\n## Architecture Overview\n..."
+  "demographicBreakdown": "...",
+  "schoolsAnalysis": "...",
+  "roadsAnalysis": "...",
+  "hospitalsAnalysis": "...",
+  "populationInsights": "...",
+  "waterSupplyAnalysis": "...",
+  "electricityAnalysis": "...",
+  "geoMappingData": "...",
+  "sanitationAnalysis": "...",
+  "connectivityAnalysis": "...",
+  "budgetUtilization": "...",
+  "governmentSchemes": "...",
+  "detailedReport": "# Comprehensive Public Data Analysis\\n\\n## Data Sources Overview\\n..."
 }
-Generate realistic technical content for the user's business goal. 
-CRITICAL: The htmlPrototype MUST be a massive, fully functional, production-ready multi-section landing page (Hero, Navbar, Features, Testimonials, Pricing, Footer). Use Tailwind CSS. Add interactivity with JS. Do not output a simple stub or basic template. Write at least 400+ lines of clean HTML, CSS, and JS with zero placeholders, dummy tags, or generic text. Do not use escaped newline characters (\n) in the page; write actual literal newlines.
-CRITICAL: You MUST include a 'detailedReport' string containing a massive, expert-level 1000+ word deep-dive report formatted in Markdown, explaining: Folder structure, Tech Stack, Backend, Frontend, Database, Deployment, GitHub, Hosting, Performance, Security, Alternative Manual Development Guide, Useful Documentation Links, Official Resources, Learning Resources. Write all of this in full detail.`;
+Generate realistic, detailed civic data analysis for the user's query.
+CRITICAL: You MUST include a 'detailedReport' string containing a massive, expert-level 1000+ word deep-dive report formatted in Markdown, covering: Data Sources, Demographic Analysis, Infrastructure Status, Health & Education, Budget Analysis, Geo-Mapping Insights, Correlation Analysis, Recommendations, Summary. Write everything in full detail.`;
 
-const PITCH_PROMPT = `You are the COMET Pitch Agent. Generate an investor pitch deck as structured slide data.
+const RECOMMENDATION_PROMPT = `You are the COMET Recommendation Agent. You rank development projects, generate MP reports with priority scores, budget estimates, and executive summaries with action recommendations.
 You MUST respond with ONLY a valid JSON object (no markdown fences). Match this exact structure:
 {
-  "executiveSummary": "2-3 sentence elevator pitch",
-  "slides": [
-    { "title": "The Problem", "content": "Markdown content for this slide with bullet points and key stats", "speakerNotes": "What to say when presenting this slide", "keyMetric": "$4.2B", "keyMetricLabel": "Market Size" },
-    { "title": "Our Solution", "content": "...", "speakerNotes": "...", "keyMetric": "10x", "keyMetricLabel": "Faster" },
-    { "title": "Market Opportunity", "content": "...", "speakerNotes": "..." },
-    { "title": "Business Model", "content": "...", "speakerNotes": "..." },
-    { "title": "Competition", "content": "...", "speakerNotes": "..." },
-    { "title": "Revenue & Traction", "content": "...", "speakerNotes": "...", "keyMetric": "$50K", "keyMetricLabel": "MRR" },
-    { "title": "Financials", "content": "...", "speakerNotes": "..." },
-    { "title": "Roadmap", "content": "...", "speakerNotes": "..." },
-    { "title": "The Team", "content": "...", "speakerNotes": "..." },
-    { "title": "The Ask", "content": "...", "speakerNotes": "...", "keyMetric": "$500K", "keyMetricLabel": "Seed Round" }
+  "executiveSummary": "2-3 sentence executive summary of top priority recommendations for the MP",
+  "recommendations": [
+    { "projectName": "Ward 5 Road Rehabilitation", "priorityScore": "92/100", "budgetEstimate": "₹2.4 Cr", "budgetEstimateLabel": "Estimated Cost", "impactSummary": "Markdown content describing impact, beneficiaries, and timeline", "implementationNotes": "Implementation strategy and phasing notes", "urgencyLabel": "Critical" },
+    { "projectName": "Primary Health Center Upgrade", "priorityScore": "87/100", "budgetEstimate": "₹1.8 Cr", "budgetEstimateLabel": "Estimated Cost", "impactSummary": "...", "implementationNotes": "...", "urgencyLabel": "High" }
   ],
-  "detailedReport": "# Complete Pitch Deck Strategy\\n\\n## Presentation Script\\n..."
+  "detailedReport": "# Comprehensive Recommendation Report\\n\\n## Methodology\\n..."
 }
-Generate exactly 15 highly detailed, compelling, distinct slides for investors. The slides MUST be Cover, Agenda, Problem, Market, Solution, Architecture, Features, Workflow, Business Model, Competitors, Roadmap, Future, Demo, Conclusion, Thank You. Ensure slide content uses rich markdown with bullet points and bold text. No placeholder text. Include Speaker Notes, Presentation Script, Icons, and Animations.
-CRITICAL: You MUST include a 'detailedReport' string containing a massive, expert-level 1000+ word deep-dive report formatted in Markdown, including Presentation Script, Images Suggestions, Animation Suggestions, Charts Suggestions, and Professional Layout Suggestions.`;
+Generate exactly 15 highly detailed, compelling, distinct project recommendations. The recommendations MUST cover: Roads, Water Supply, Healthcare, Education, Sanitation, Electricity, Digital Connectivity, Agriculture, Housing, Public Transport, Women & Child Welfare, Senior Citizen Services, Skill Development, Environmental Protection, and Community Infrastructure. Include Priority Scores, Budget Estimates, Impact Analysis, and Implementation Notes.
+CRITICAL: You MUST include a 'detailedReport' string containing a massive, expert-level 1000+ word deep-dive report formatted in Markdown, including Scoring Methodology, Budget Justification, Risk Assessment, Implementation Roadmap, and Monitoring Framework.`;
 
 export const AGENT_SYSTEM_PROMPTS: Record<string, string> = {
-  research: RESEARCH_PROMPT,
-  strategy: STRATEGY_PROMPT,
-  content: CONTENT_PROMPT,
-  development: DEVELOPMENT_PROMPT,
-  pitch: PITCH_PROMPT,
+  research: CITIZEN_INSIGHTS_PROMPT,
+  strategy: DEVELOPMENT_PLANNING_PROMPT,
+  content: COMMUNICATION_PROMPT,
+  development: PUBLIC_DATA_PROMPT,
+  pitch: RECOMMENDATION_PROMPT,
 };
 
 // ===== Fetch with Timeout =====
@@ -180,7 +159,7 @@ async function callOpenRouter(messages: Array<{role: string; content: string}>, 
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
       'HTTP-Referer': window.location.origin,
-      'X-Title': 'COMET Agent',
+      'X-Title': 'COMET Civic Intelligence',
     },
     body: JSON.stringify({
       model: 'meta-llama/llama-3.1-8b-instruct',
@@ -241,15 +220,15 @@ function cleanJsonResponse(raw: string): string {
 function validateAgentOutput(agentId: string, data: Record<string, unknown>): boolean {
   switch (agentId) {
     case 'research':
-      return !!(data.executiveSummary && data.marketPotential && data.competitionLevel && Array.isArray(data.marketTrends));
+      return !!(data.executiveSummary && data.issueSeverity && data.urgencyLevel && Array.isArray(data.recurringIssues));
     case 'strategy':
-      return !!(data.businessName && data.uniqueSellingProposition && Array.isArray(data.customers) && Array.isArray(data.keyMilestones));
+      return !!(data.districtName && data.keyObjective && Array.isArray(data.infrastructureGaps) && Array.isArray(data.keyMilestones));
     case 'content':
-      return !!(data.executiveSummary && data.platforms && Array.isArray(data.platforms));
+      return !!(data.executiveSummary && data.channels && Array.isArray(data.channels));
     case 'development':
-      return !!(data.htmlGeneratorText && data.architectureDescription && Array.isArray(data.recommendedStack));
+      return !!(data.dataOverview && data.infrastructureAnalysis && Array.isArray(data.dataSources));
     case 'pitch':
-      return !!(data.executiveSummary && data.slides && Array.isArray(data.slides));
+      return !!(data.executiveSummary && data.recommendations && Array.isArray(data.recommendations));
     default:
       return !!data.executiveSummary || !!data.simpleSummary;
   }
@@ -281,1154 +260,622 @@ async function callWithRetry(fn: () => Promise<string>, maxRetries: number): Pro
 function getMockFallback(agentId: string): Record<string, unknown> {
   const mocks: Record<string, Record<string, unknown>> = {
     research: {
-      executiveSummary: "Opening a local gym presents a consistent market opportunity driven by increasing health awareness and a desire for community-centric wellness solutions.",
-      marketPotential: "The demand for health and fitness services remains robust, driven by increasing health consciousness and diverse workout preferences across demographics.",
-      competitionLevel: "High",
-      opportunityScore: 68,
-      topCompetitors: [
-        { company: "Budget Chain Gym (e.g., Planet Fitness)", strength: "Low membership cost, widespread accessibility", weakness: "Often crowded, limited personalized attention", position: "Mass market, value-driven" },
-        { company: "Boutique Fitness Studio", strength: "Highly specialized programs, strong community", weakness: "High price point, niche appeal", position: "Niche market, premium experience" },
-        { company: "Local Crossfit Box", strength: "Intense community bond, strong coaching presence", weakness: "Intimidating to newcomers, high injury perception", position: "High-performance fitness market" },
-        { company: "YMCA / Community Centers", strength: "Family-friendly, subsidized memberships, pool access", weakness: "Older equipment, less modern aesthetic", position: "Subsidized family & senior market" },
-        { company: "Corporate Wellness Programs", strength: "Direct channel to employees, subsidized costs", weakness: "Lacks specialized trainers, limited community focus", position: "B2B employee benefit market" }
+      executiveSummary: "Ward 5 has received 342 citizen complaints over the past quarter. Road infrastructure and water supply dominate the complaint landscape, accounting for 68% of all submissions. Urgent intervention is required in 3 villages where roads become impassable during monsoon season, directly affecting 12,000+ residents.",
+      issueSeverity: "Road infrastructure degradation affects 68% of reported complaints, with 12 villages reporting impassable conditions during monsoon. Water supply disruptions impact 8,500 households with intermittent supply averaging 2 hours per day against the mandated 4 hours.",
+      urgencyLevel: "High",
+      citizenSatisfaction: 34,
+      topThemes: [
+        { theme: "Road Repair & Maintenance", frequency: "142 complaints", affectedArea: "Ward 5, 7, 12 — Villages: Kondapuram, Markapuram, Yerragondapalem" },
+        { theme: "Drinking Water Supply", frequency: "89 complaints", affectedArea: "Ward 3, 5, 8 — Bore wells non-functional in 6 hamlets" },
+        { theme: "Primary Healthcare Access", frequency: "54 complaints", affectedArea: "Ward 9, 11 — No PHC within 15km radius" },
+        { theme: "School Infrastructure", frequency: "38 complaints", affectedArea: "Ward 2, 4 — 12 schools without proper roofing" },
+        { theme: "Sanitation & Drainage", frequency: "19 complaints", affectedArea: "Ward 1, 6 — Open drainage causing waterborne diseases" }
       ],
-      marketSizeData: [{ label: "Budget Chains", value: 35 }, { label: "Boutique Studios", value: 45 }, { label: "Local Independent Gyms", value: 20 }],
-      marketTrends: [
-        "Rising demand for hybrid wellness (fitness + mental health)",
-        "Shift towards hyper-local community hubs",
-        "Increased focus on longevity and active aging",
-        "Integration of wearables and bio-tracking",
-        "Demand for flexible, non-contractual memberships"
+      complaintCategories: [{ label: "Roads", value: 42 }, { label: "Water", value: 26 }, { label: "Healthcare", value: 16 }, { label: "Schools", value: 11 }, { label: "Sanitation", value: 5 }],
+      recurringIssues: [
+        "Pothole-ridden state highway connecting Kondapuram to district headquarters — 23km stretch with no maintenance in 3 years, causing 14 reported vehicle accidents",
+        "Intermittent water supply in Ward 5 hamlets — bore wells dried up due to falling water table, hand pump installations pending since 2024",
+        "Primary Health Center in Markapuram operates without a resident doctor — nearest hospital 28km away, emergency cases require costly private ambulance transport",
+        "Government primary schools in Ward 2 lack functional toilets — leading to 40% dropout rate among girls after Class 5",
+        "Open drainage channels in Ward 1 overflow during monsoon — raw sewage enters residential areas, causing repeated cholera and dengue outbreaks"
       ],
-      targetDemographics: [
-        "Millennial professionals (28-40) seeking work-life balance and high-end class settings",
-        "Active seniors (60+) requiring functional movement and social connection hubs",
-        "Local families needing coordinated fitness schedules and child watch services"
+      affectedDemographics: [
+        "Agricultural laborers (age 25-55) comprising 62% of the working population — road damage prevents produce transport to mandis, causing 15-20% post-harvest losses",
+        "Women and children in rural hamlets — forced to walk 2-3 km daily for water collection, with children missing school during summer months",
+        "Senior citizens (age 60+) in remote villages — lack of nearby healthcare facilities means treatable conditions become emergencies"
       ],
       keyRisks: [
-        "Economic downturn reducing disposable income for premium memberships",
-        "High staff turnover for specialized trainers",
-        "Intense local competition from established chains"
+        "Monsoon season (July-September) will render 34 km of kutcha roads completely impassable, isolating 8 villages from emergency services",
+        "Water table depletion accelerating — without rainwater harvesting intervention, 12 hamlets face complete groundwater exhaustion within 2 years",
+        "Healthcare staff retention critically low — 3 of 5 PHC doctor positions vacant for 18+ months due to remote posting disincentives"
       ],
-      detailedReport: `# Comprehensive Research Report: Health & Wellness Market Intelligence
+      detailedReport: `# Comprehensive Citizen Insights Report: Ward-Level Analysis
 
 ## Introduction
-The health and wellness sector has undergone a structural transformation over the past five years. No longer restricted to bodybuilders or elite athletes, fitness is now recognized as a foundational pillar of preventive healthcare, mental health, and community connection. This report details the market dynamics, opportunities, competitive landscapes, and best practices for establishing a modern fitness and wellness brand in a competitive urban landscape.
+This report presents a thorough analysis of citizen complaints, feedback submissions, and recurring development themes across the constituency. Data has been aggregated from 342 individual submissions received through voice calls, written applications, WhatsApp messages, and gram sabha minutes over the past quarter.
 
 ---
 
-## Market Overview
-The global wellness economy is valued at over $5.6 trillion, with physical activity representing one of the largest and most resilient segments. Despite fluctuations in economic environments, consumers increasingly prioritize spending on wellness services, viewing them as non-discretionary investments in their health. The rise of hybrid working models has shifted demand from downtown business district gyms to hyper-local neighborhood hubs, creating prime opportunities for local operators.
+## Complaint Analysis
+The complaint distribution reveals a clear pattern of infrastructure neglect. Roads account for 42% of all complaints, followed by water supply (26%), healthcare access (16%), school infrastructure (11%), and sanitation (5%). Notably, 78% of road-related complaints originate from just 3 wards (5, 7, and 12), indicating a concentrated infrastructure crisis.
+
+### Complaint Volume by Month
+| Month | Total Complaints | Roads | Water | Healthcare | Schools | Sanitation |
+|:---|:---|:---|:---|:---|:---|:---|
+| April | 98 | 45 | 22 | 18 | 8 | 5 |
+| May | 112 | 48 | 31 | 15 | 12 | 6 |
+| June | 132 | 49 | 36 | 21 | 18 | 8 |
+
+The upward trend (35% increase from April to June) correlates with the pre-monsoon period when infrastructure vulnerabilities become acutely visible.
 
 ---
 
-## Best Practices
-1. **Focus on Community Integration:** Successful operators build hubs where members socialize before and after workouts. Incorporating social spaces, lounges, and recovery zones increases retention rates by up to 25%.
-2. **Implement Hybrid Wellness Services:** Offer mindfulness sessions, nutritional advice, and mental health workshops alongside traditional functional training to capture a larger wallet share.
-3. **Flexible Pricing & Memberships:** Avoid restrictive yearly contracts. Modern consumers demand flexible, tier-based monthly memberships and transparent cancelation terms.
-4. **Data-Driven Progression:** Use wearable tech integration and progress tracking software to show concrete improvements to members, increasing loyalty.
+## Theme Clustering
+Using natural language processing on citizen submissions, five dominant clusters emerge:
+
+1. **Road Connectivity Crisis**: Citizens from Kondapuram, Markapuram, and surrounding villages consistently report dangerous road conditions. The state highway connecting these areas to the district headquarters has not received maintenance funding in 3 years. Specific complaints mention potholes exceeding 2 feet in depth, missing culverts, and complete road washouts during heavy rain.
+
+2. **Water Scarcity Emergency**: Six hamlets in Ward 5 report bore well failures. The groundwater table has dropped by 15 meters over the past decade. Hand pump installations approved in the 2024-25 budget remain unexecuted. Women report walking 2-3 km daily for water collection.
+
+3. **Healthcare Desert**: Two wards (9 and 11) have no Primary Health Center within a 15 km radius. The existing PHC in Markapuram operates without a permanent doctor, relying on a visiting physician available only 2 days per week. Emergency cases require private ambulance transport costing ₹2,000-5,000.
+
+4. **Education Infrastructure Decay**: Twelve government primary schools across Wards 2 and 4 lack weather-proof roofing. During monsoon, classes are suspended for an average of 30 days. The absence of functional toilets in 8 schools contributes to a 40% dropout rate among girls after Class 5.
+
+5. **Sanitation Hazards**: Open drainage systems in Ward 1 and 6 overflow during monsoon, introducing raw sewage into residential areas. Three cholera outbreaks and recurring dengue cases have been documented in the past 18 months.
 
 ---
 
-## Common Mistakes
-- **Neglecting the Third Space Concept:** Failing to create a welcoming lounge area, forcing members to leave immediately after their sessions.
-- **Over-indexation on High-Intensity Workouts:** Excluding demographics like active seniors, beginners, or rehab patients by offering only elite-level fitness programs.
-- **Failing to Track Member Attendance:** High-churn businesses fail to reach out to members who stop attending. Proactive retention calls can save up to 40% of canceling members.
-- **Underfunding Facility Maintenance:** Dirty locker rooms and broken equipment are the top reasons members cancel their memberships.
+## Demographic Impact
+The complaints disproportionately affect three vulnerable groups:
+- **Agricultural workers** lose 15-20% of produce value due to road inaccessibility to market mandis
+- **Women and girls** bear the burden of water collection and education dropout
+- **Elderly residents** face life-threatening delays in accessing emergency healthcare
 
 ---
 
-## Advanced Tips
-*   **Establish Strategic Corporate Partnerships:** Partner with local businesses to offer employee wellness plans, securing steady B2B recurring revenue.
-*   **Leverage Micro-Influencers:** Invite local community leaders, fitness enthusiasts, and wellness advocates to trial your space, driving organic neighborhood referrals.
-*   **Optimize the Off-Peak Schedule:** Offer specialized group classes for seniors or stay-at-home parents during low-attendance mid-day hours.
+## Severity Assessment
+Based on a composite scoring of urgency (citizen demand volume), population impact (affected households), and infrastructure gap magnitude, the overall constituency development urgency is rated **HIGH** with a citizen satisfaction index of **34/100**.
 
 ---
 
-## Professional Examples
-*   **Equinox:** Leverages premium branding, high-end amenities, and lifestyle positioning to command premium pricing.
-*   **Barry's Bootcamp:** Focuses on immersive group experiences, lighting, and intense community marketing to drive high class attendance.
-*   **Orangetheory Fitness:** Utilizes gamification, heart-rate tracking technology, and structured zone-training to guarantee visible progression.
-
----
-
-## Real-world Use Cases
-Consider the revitalization of local wellness hubs in secondary metropolitan markets. Gyms that integrated cold plunge tubs, saunas, and coworking desks saw membership lifetime value (LTV) increase by 32% within six months, proving that consumers are willing to pay premium prices for comprehensive health hubs.
-
----
-
-## Step-by-step Guide
-1. **Market Mapping:** Analyze all competitors within a 3-mile radius to identify service gaps (e.g., lack of child watch, poor group classes).
-2. **Facility Design:** Allocate 60% of floor space to workouts, 20% to locker rooms and recovery, and 20% to reception and community lounge.
-3. **Pre-sale Phase:** Launch digital marketing campaigns 3 months before opening to secure a base of founding members, covering operational expenses from day one.
-4. **Staff Onboarding:** Train all staff on hospitality, ensuring every member is greeted by name to foster a community feel.
-
----
-
-## Checklist
-- [x] Conduct competitive analysis within a 5-mile radius
-- [x] Secure local zoning permits and liability insurance
-- [x] Set up premium booking and member management software
-- [x] Hire certified head trainers and customer success staff
-- [x] Complete facility buildout including acoustics and ventilation
-- [x] Establish cleaning protocols and maintenance checklists
+## Recommendations
+1. Immediate road repair of the 23 km Kondapuram-HQ highway under PMGSY or state highway maintenance funds
+2. Emergency bore well rehabilitation and rainwater harvesting structures in Ward 5
+3. Recruitment drive for PHC medical officers with rural posting incentives
+4. School infrastructure repair under Samagra Shiksha Abhiyan funds
+5. Closed drainage system construction in Ward 1 and 6 under SBM-G Phase II
 
 ---
 
 ## Summary
-The local health and wellness market remains highly lucrative for operators who prioritize hospitality, community, and comprehensive wellness over raw gym equipment. By focusing on hybrid physical-mental health services and maintaining high facility standards, new brands can successfully compete against major corporate budget chains.
-
----
-
-## FAQs
-**Q: How long does it take to reach profitability?**
-A: Most boutique wellness centers reach operational break-even within 3 to 6 months of launch, provided they run a successful pre-sale campaign.
-
-**Q: Do I need to buy all equipment upfront?**
-A: No, equipment leasing is highly recommended to preserve capital for marketing, facility renovations, and initial cash flow reserves.
-
-**Q: How do we stand out from budget gyms?**
-A: Focus heavily on personalized coaching, clean environments, state-of-the-art recovery services, and community events that budget chains cannot replicate.
-
----
-
-## Expert Recommendations
-Invest heavily in your brand's digital reservation system and mobile app. Consumers expect a seamless, single-tap experience for booking classes, tracking progress, and communicating with coaches. A poor booking experience will lead to immediate member attrition.`,
+The constituency faces a multi-dimensional infrastructure crisis concentrated in specific wards. Data-driven prioritization, combined with convergence of central and state scheme funds, can address the most critical citizen demands within 12-18 months. Immediate MP intervention is recommended for road and water supply projects that impact the largest number of citizens.`,
       deliverables: []
     },
     strategy: {
-      businessName: "Anchor Wellness Collective",
-      tagline: "Your Local Hub for Holistic Health & Connection.",
-      uniqueSellingProposition: "A supportive, community-driven wellness hub offering holistic fitness, personalized coaching, and recovery services in a modern, welcoming local environment, fostering genuine connection beyond just workouts.",
-      customers: [
-        "Local Residents (25-55) seeking a supportive, engaging gym experience beyond basic equipment; value community and holistic health.",
-        "Wellness-Oriented Professionals looking for stress relief, mental clarity, and comprehensive well-being services.",
-        "Active Seniors desiring functional fitness, social interaction, and tailored guidance.",
-        "Corporate Clients seeking wellness benefits for their remote/local workforces.",
-        "Rehab & Post-Injury Clients needing careful guidance and holistic recovery services.",
-        "Young Professionals looking for a social fitness third-space to replace bars or remote coffee shops."
+      districtName: "Prakasam District Development Plan",
+      visionStatement: "Transform rural infrastructure through data-driven prioritization and citizen-centric governance.",
+      keyObjective: "Address critical infrastructure gaps in roads, water supply, and healthcare facilities across 15 wards by prioritizing high-impact, citizen-demanded projects within available MPLADS, state, and central scheme budget allocations over a 24-month implementation window.",
+      infrastructureGaps: [
+        "Roads: 34% of district roads in poor condition — 23 km state highway and 67 km of internal village roads require immediate repair or reconstruction.",
+        "Water Supply: 6 hamlets without functional bore wells — groundwater table dropped 15m in a decade, hand pump installations pending since 2024 budget approval.",
+        "Healthcare: 2 wards (9, 11) classified as healthcare deserts — no PHC within 15 km, 3 of 5 doctor positions vacant for 18+ months.",
+        "Education: 12 primary schools without weatherproof roofing — 8 schools lack functional toilets, contributing to 40% girl dropout after Class 5.",
+        "Sanitation: Open drainage in Ward 1 and 6 — raw sewage overflow during monsoon, 3 cholera outbreaks in 18 months.",
+        "Digital Connectivity: 4 gram panchayats without mobile network coverage — no internet access for e-governance services or digital education."
       ],
-      value: [
-        "Thriving Community: Foster genuine connections through group classes, social events, and shared wellness journeys.",
-        "Holistic Wellness: Integrate fitness with recovery zones (sauna, cold plunge, massage), mindfulness sessions, and nutrition workshops.",
-        "Expert & Personalized Guidance: Highly qualified trainers offering customized progress mapping.",
-        "Uncompromised Facility Hygiene: Setting the standard for cleanliness, fresh air circulation, and modern aesthetics.",
-        "Flexible, Transparent Pricing: Zero-contract memberships with easy online adjustments.",
-        "Mind-Body Synthesis: Dedicated yoga, breathwork, and meditation classes alongside strength training."
+      proposedProjects: [
+        "PMGSY Road Rehabilitation: Reconstruct 23 km Kondapuram-HQ highway with drainage, culverts, and road markings — estimated ₹8.5 Cr from central funds.",
+        "Jal Jeevan Mission Extension: Install 12 new bore wells and 3 overhead tanks in Ward 5 hamlets — estimated ₹2.1 Cr under JJM convergence.",
+        "PHC Upgrade Program: Construct 2 new sub-health centers in Ward 9 and 11, recruit 3 MBBS doctors with rural incentive packages — ₹3.2 Cr.",
+        "School Infrastructure Revival: Repair roofing for 12 schools, construct toilet blocks in 8 schools under Samagra Shiksha — ₹1.8 Cr.",
+        "Closed Drainage Network: Replace open drains in Ward 1 and 6 with covered drainage under SBM-G Phase II — ₹2.5 Cr.",
+        "Digital Village Initiative: Install 4 mobile towers and establish 6 Common Service Centers for e-governance — ₹1.2 Cr under BharatNet."
       ],
-      channels: [
-        "Physical Location: Welcoming facility with prominent street presence and community cafe.",
-        "Local Partnerships: Collaborations with local health stores, physiotherapists, cafes, community organizations.",
-        "Digital Local Marketing: Google My Business optimization, geotargeted social media ads (Facebook, Instagram), local SEO.",
-        "Corporate Outreach: Direct B2B sales to local office hubs and tech campuses.",
-        "Referral Network: Reward programs offering membership credits for introducing friends and family.",
-        "Community Events: Monthly public workshops, outdoor charity runs, and health seminars."
+      implementationChannels: [
+        "MPLADS Fund: Direct allocation of ₹5 Cr/year for constituency-level projects — prioritize water and school infrastructure.",
+        "State Highway Department: Coordinate with PWD for highway rehabilitation under state road maintenance budget.",
+        "Jal Jeevan Mission: Leverage central scheme for piped water supply — convergence with NREGA for labor component.",
+        "District Collector Office: Monthly review meetings with block development officers for project monitoring.",
+        "Gram Panchayat Partnership: Engage local self-government bodies for land acquisition, community contribution, and maintenance.",
+        "CSR Partnerships: Engage local industries for school adoption and digital infrastructure sponsorship."
       ],
-      revenue: [
-        "Tiered Monthly/Annual Memberships: Offering different access levels (e.g., basic, class-inclusive, premium with recovery access).",
-        "Personal Training Packages: 1:1, small group, and specialized coaching sessions.",
-        "Specialized Workshops & Programs: Fees for nutrition coaching, mindfulness series, wellness challenges.",
-        "Retail & Beverage: Sales of branded activewear, nutritional supplements, and healthy cafe drinks.",
-        "Corporate Wellness Contracts: Monthly retainer packages for local companies."
+      budgetAllocation: [
+        "Road Infrastructure: ₹8.5 Cr (44%) — PMGSY central fund + state PWD maintenance budget convergence.",
+        "Water Supply: ₹2.1 Cr (11%) — Jal Jeevan Mission + MPLADS top-up for hand pump rehabilitation.",
+        "Healthcare: ₹3.2 Cr (17%) — State health department + National Health Mission rural incentive scheme.",
+        "Education: ₹1.8 Cr (9%) — Samagra Shiksha Abhiyan + district education fund.",
+        "Sanitation: ₹2.5 Cr (13%) — Swachh Bharat Mission-Gramin Phase II + NREGA convergence."
       ],
       keyMilestones: [
-        "Month 1: Secure lease and begin facility build-out.",
-        "Month 2: Launch pre-sale marketing campaign and hire core staff.",
-        "Month 3: Soft opening for founding members.",
-        "Month 6: Achieve 300 active memberships."
+        "Month 1: Submit MPLADS project proposals and convene district-level review with collector.",
+        "Month 3: Complete DPR preparation for road rehabilitation and water supply projects.",
+        "Month 6: Begin construction on priority road segments and bore well installations.",
+        "Month 12: Complete Phase 1 — road rehabilitation, 8 bore wells operational, 2 PHC staff recruited.",
+        "Month 18: Complete school repairs, drainage network in Ward 1, digital connectivity in 2 panchayats.",
+        "Year 2: Full project completion, monitoring dashboard live, citizen satisfaction re-survey."
       ],
-      marketingTactics: [
-        "Run highly targeted local Facebook/Instagram ad campaigns focusing on community.",
-        "Host free outdoor weekend bootcamps in local parks.",
-        "Partner with local cafes for cross-promotional discounts."
+      priorityActions: [
+        "Immediate: Convene emergency meeting with district collector to expedite pending bore well installations in Ward 5 — target completion within 60 days.",
+        "Week 2: Write to state PWD secretary requesting emergency road maintenance fund release for Kondapuram highway — cite accident data and citizen petitions.",
+        "Month 1: Submit MPLADS proposals for school toilet construction and PHC equipment — fast-track approval through speaker's office.",
+        "Month 2: Launch 'Jan Sunwai' (public hearing) series in affected wards to gather updated citizen priorities and build community ownership.",
+        "Month 3: Establish ward-level monitoring committees with gram panchayat presidents to track project execution and fund utilization."
       ],
-      detailedReport: `# Comprehensive Strategy and Business Execution Plan
+      detailedReport: `# Comprehensive Development Plan: Prakasam District
 
 ## Executive Summary & Strategic Position
-Anchor Wellness Collective is positioned to capture the growing premium holistic wellness market. By offering a hybrid third-space combining functional fitness with state-of-the-art recovery systems, the brand targets middle-to-high income professionals who value health, community, and longevity. The core strategy is built on maximizing member retention through exceptional hospitality and tech-enabled progress tracking.
+The Prakasam District Development Plan is positioned to address the acute infrastructure deficit affecting 15 wards and approximately 2.8 lakh citizens. By leveraging convergence of MPLADS funds, central government schemes (PMGSY, JJM, SBM-G, SSA), and state department budgets, the plan targets ₹19.3 Cr in total investment over a 24-month implementation window. The core strategy prioritizes high-citizen-demand projects with maximum population impact.
 
 ---
 
-## 12-Month Execution Roadmap
-- **Q1 (Launch & Stabilize):** Finalize build-out, launch founding member pre-sales with a target of 150 sign-ups, recruit core training team, and optimize booking software flow.
-- **Q2 (Growth & Engagement):** Launch corporate partnership outreach, host monthly community workshops, introduce specialized recovery memberships, and target 250 active members.
-- **Q3 (Expansion & Retain):** Roll out advanced personal training packages, initiate a local influencer referral network, conduct facility satisfaction surveys, and reach 350 members.
-- **Q4 (Optimize & Profit):** Introduce retail and cafe lines, launch secondary off-peak programs for seniors/rehabilitation, and establish 85% operating capacity.
+## 24-Month Execution Roadmap
+- **Q1 (Planning & Approvals):** Submit all DPRs, convene district review, expedite pending bore well orders, launch Jan Sunwai series.
+- **Q2 (Phase 1 Construction):** Begin road rehabilitation (23 km highway), install first 8 bore wells, recruit PHC doctors.
+- **Q3 (Parallel Execution):** Launch school repairs, drainage construction in Ward 1, establish monitoring committees.
+- **Q4 (Phase 1 Completion):** Complete highway rehabilitation, all bore wells operational, first PHC fully staffed.
+- **Q5-Q6 (Phase 2):** Internal village road repairs, digital connectivity installations, remaining school infrastructure.
+- **Q7-Q8 (Completion & Review):** Full project completion, citizen satisfaction re-survey, monitoring dashboard deployment.
 
 ---
 
-## Key Performance Indicators (KPIs)
-*   **Member Churn Rate:** Target < 4% monthly (Industry average is 6-8%).
-*   **Average Revenue Per User (ARPU):** Target $165/month through secondary purchases (workshops, retail, recovery access).
-*   **Customer Acquisition Cost (CAC):** Target < $85 through local SEO, referrals, and organic community programs.
-*   **Membership Capacity:** Target 400 active members to reach optimal class density and operational capacity.
-*   **Net Promoter Score (NPS):** Target > 75 through quarterly member surveys.
+## Key Performance Indicators
+- **Road Accessibility:** Target 95% of village roads in good/fair condition (currently 66%)
+- **Water Supply Hours:** Target 4 hours/day minimum (currently 2 hours intermittent)
+- **Healthcare Distance:** Target PHC within 10 km for all residents (currently 15+ km for 2 wards)
+- **School Attendance:** Target 85% attendance rate (currently 72% due to infrastructure issues)
+- **Citizen Satisfaction:** Target 65/100 (currently 34/100)
 
 ---
 
-## Timeline & Phased Implementation
-\\\`\\\`\\\`
-Phase 1: Pre-Launch (Weeks 1-8)
-├── Lease negotiation & design permits
-├── Landing page & pre-sale campaign setup
-└── Hiring core staff
-
-Phase 2: Pre-Sale & Build (Weeks 9-16)
-├── Facility renovation & equipment install
-├── Pre-sale launch (Aiming for 150 members)
-└── Staff training & mock classes
-
-Phase 3: Launch & Growth (Weeks 17-32)
-├── Grand opening week events
-├── Local SEO push & corporate wellness launch
-└── Weekly community events
-
-Phase 4: Optimization (Weeks 33-52)
-├── Retail and cafe line launch
-├── Off-peak class additions
-└── Profit margin optimization
-\\\`\\\`\\\`
+## Budget & Financial Framework
+| Category | Budget (₹ Cr) | Funding Source | Timeline |
+|:---|:---|:---|:---|
+| Road Infrastructure | 8.5 | PMGSY + State PWD | Months 3-12 |
+| Water Supply | 2.1 | Jal Jeevan Mission + MPLADS | Months 2-8 |
+| Healthcare | 3.2 | NHM + State Health Dept | Months 1-12 |
+| Education | 1.8 | Samagra Shiksha + District Fund | Months 4-15 |
+| Sanitation | 2.5 | SBM-G Phase II + NREGA | Months 6-18 |
+| Digital Connectivity | 1.2 | BharatNet + CSR | Months 8-20 |
 
 ---
 
-## Comprehensive Budget & Financial Forecast
-| Expense Category | Pre-Launch Budget | Monthly Operating Cost | Projected Year 1 Return |
-| :--- | :--- | :--- | :--- |
-| Facility & Renovation | $85,000 | $4,500 (Rent) | Net Margin: 28% |
-| Equipment (Leased) | $15,000 | $1,800 | Break-even: Month 5 |
-| Marketing & Launch Ads | $12,000 | $1,200 | CAC: $78 average |
-| Staff Payroll | $8,000 | $8,500 | LTV: $1,980 per member |
-| Working Capital | $25,000 | $1,500 (Software/Util) | Year 1 Profit: $118,000 |
-
----
-
-## Growth Strategy & Scalability
-Our growth strategy is focused on building a deep community bond that allows us to expand into branded retail, nutritional supplements, and specialized digital training. Once the pilot location achieves 90% capacity, we will initiate mapping for location 2 in a adjacent high-density suburb, leveraging centralized software, marketing, and operations.
-
----
-
-## Risk Management & Mitigation
-1. **Economic Shock Risk:** Mitigation: Offer flexible, lower-cost membership tiers (e.g., class-only or off-peak only) to prevent cancellations.
-2. **Staff Churn Risk:** Mitigation: Implement profit-sharing models for trainers based on class attendance, offering compensation 15% above market average.
-3. **Local Competition Risk:** Focus heavily on high-end recovery services (saunas, plunges) that standard functional gyms and budget clubs do not offer.`,
+## Risk Management
+1. **Fund Release Delays:** Mitigation: Pre-submit utilization certificates for previous MPLADS allocation; maintain buffer timeline of 3 months.
+2. **Contractor Quality Issues:** Mitigation: Implement third-party quality audits at 25%, 50%, and 75% completion stages.
+3. **Doctor Recruitment Failure:** Mitigation: Offer rural posting incentives (25% salary premium + housing) and approach state medical colleges for compulsory rural service placements.
+4. **Monsoon Disruption:** Schedule all road construction for October-May dry season; use monsoon period for DPR preparation and procurement.`,
       deliverables: []
     },
     content: {
-      executiveSummary: "A multi-platform content strategy designed to build brand awareness with 3 distinct ideas for each platform.",
-      platforms: [
+      executiveSummary: "A comprehensive multi-channel civic communication strategy designed to keep citizens informed about ongoing development works, upcoming projects, and government initiatives across the constituency.",
+      channels: [
         {
-          platform: "Instagram",
-          ideas: [
+          channel: "Public Notice",
+          entries: [
             {
-              caption: "Exciting news for local businesses: Anchor Wellness Collective is coming!\\n\\nAs Anchor Wellness Collective prepares to open, we're dedicated to fostering not just physical health but also robust community engagement. Our vision includes corporate wellness partnerships that enhance employee well-being and productivity.",
-              hook: "Exciting news for local businesses: Anchor Wellness Collective is coming!",
-              hooks: ["The future of local wellness is finally here.", "Anchor Wellness Collective is officially landing in your neighborhood."],
-              cta: "Connect with us to explore collaboration opportunities for your team's health.",
-              hashtags: ["#CorporateWellness", "#EmployeeHealth", "#AnchorWellness"],
-              seoTitle: "Anchor Wellness Collective - Premier Neighborhood Fitness Studio",
-              seoDescription: "Discover Anchor Wellness Collective, a premier holistic fitness and community hub in your neighborhood. Group classes, saunas, plunges, and more.",
-              keywords: ["holistic gym", "neighborhood fitness", "wellness studio", "group training"],
-              postingTime: "Tuesday 8:30 AM EST",
-              targetAudience: "Busy local professionals seeking stress relief and fitness community",
-              carousel: ["Slide 1: Meet the Collective", "Slide 2: Our Pillars of Health", "Slide 3: Modern Recovery Area", "Slide 4: Join the Waitlist"],
-              story: "Show behind-the-scenes buildout clip. Ask audience: 'What wellness service do you use most? [Poll: Strength vs Recovery]'",
-              reel: "A fast-paced 15s transition video showing the space transformation. Sync with trending audio. Overlay text: 'Building the ultimate third-space for local wellness.'",
-              longCaption: "Are you tired of corporate, disconnected gyms? We built Anchor Wellness Collective because we believe fitness is about more than just lifting weights. It's about recovering properly, eating well, and finding your community. That's why we're combining high-intensity group classes with a dedicated sauna, cold plunge, and social lounge. A place where you can work out, work remote, and meet your neighbors.",
-              shortCaption: "Anchor Wellness is coming. A space built for fitness, recovery, and real community. Link in bio to join waitlist.",
-              thumbnailIdea: "High contrast image of the modern sauna area with clean logo overlay",
-              videoDescription: "Introductory reel showcasing the founders and the vision behind Anchor Wellness Collective.",
-              charCount: 235,
-              score: 88
-            }
-          ]
-        },
-        {
-          platform: "Facebook",
-          ideas: [
-            {
-              caption: "Looking for a gym that actually feels like a community? Anchor Wellness Collective is opening its doors soon! We're bringing functional strength, group classes, and a premium recovery zone to your neighborhood. Join our pre-sale waitlist today.",
-              hook: "Looking for a gym that actually feels like a community?",
-              hooks: ["Tired of crowded commercial gyms?", "Your new wellness routine starts here."],
-              cta: "Click 'Sign Up' to secure your founding member rate.",
-              hashtags: ["#LocalGym", "#CommunityFirst", "#WellnessHub"],
-              seoTitle: "Anchor Wellness Collective - Local Fitness Pre-sale",
-              seoDescription: "Sign up for Anchor Wellness Collective pre-sale and get 20% off lifetime memberships. Local community-focused gym.",
-              keywords: ["local gym", "pre-sale discount", "fitness center"],
-              postingTime: "Monday 11:00 AM EST",
-              targetAudience: "Local families and neighborhood residents",
-              carousel: ["Slide 1: Pre-sale 20% Off", "Slide 2: Limited Spots Available", "Slide 3: Reserve Yours Now"],
-              story: "Pre-sale countdown graphic. Countdown sticker ending in 48 hours.",
-              reel: "Quick tour of the front desk and lounge area. Overlay: 'Pre-sale starts now!'",
-              longCaption: "We are officially launching pre-sales for Anchor Wellness Collective. As a founding member, you will get lifetime discounted rates, priority class booking, and invitations to private launch events. Spots are strictly limited to the first 100 residents to maintain our community-focused atmosphere.",
-              shortCaption: "Founding member pre-sales are officially open. Grab 20% off for life.",
-              thumbnailIdea: "Founder standing outside the building smiling",
-              videoDescription: "Full walkthrough of the founding member benefits.",
-              charCount: 220,
-              score: 85
-            }
-          ]
-        },
-        {
-          platform: "Threads",
-          ideas: [
-            {
-              caption: "Hot take: Commercial gyms want you to sign up and never show. Boutique studios want you to show up, but overcharge you. We are building the middle ground. Community, premium recovery, and fair pricing.",
-              hook: "Hot take: Commercial gyms want you to sign up and never show.",
-              hooks: ["Why does every gym feel so sterile?", "Let's talk about the 'third space' problem in local neighborhoods."],
-              cta: "Let us know: What's your biggest pet peeve at the gym?",
-              hashtags: ["#FitnessPhilosophy", "#GymCulture"],
-              seoTitle: "Anchor Wellness Collective - Gym Culture Reimagined",
-              seoDescription: "A fresh take on gym culture. Why Anchor Wellness Collective focuses on community and transparency.",
-              keywords: ["gym culture", "fitness community"],
-              postingTime: "Wednesday 7:00 PM EST",
-              targetAudience: "Thoughtful fitness consumers and industry enthusiasts",
-              carousel: ["No slides needed for Threads - Text focus"],
-              story: "Share the thread link with an emoji.",
-              reel: "No reel needed",
-              longCaption: "The commercial gym business model is broken. It relies on selling 5,000 memberships to a facility that fits 300, hoping you stay home. We want the opposite. We cap our memberships because we want you here, building habits and connecting with other members.",
-              shortCaption: "We cap our memberships because we actually want you to show up.",
-              thumbnailIdea: "Logo typography",
-              videoDescription: "No video",
-              charCount: 180,
-              score: 90
-            }
-          ]
-        },
-        {
-          platform: "X",
-          ideas: [
-            {
-              caption: "Building a health collective in public. Capping memberships at 350. Standard gym model relies on you not showing. We rely on community. Pre-sale starts tomorrow. 🧵",
-              hook: "Building a health collective in public.",
-              hooks: ["Gym membership caps are the future of fitness. Here's why.", "We're building the anti-gym."],
-              cta: "Follow the thread to see the tech stack, interior design, and pre-sale link.",
-              hashtags: ["#BuildInPublic", "#FitnessBusiness"],
-              seoTitle: "Anchor Wellness - Capped Gym Memberships",
-              seoDescription: "Why capped memberships lead to better member retention and stronger community bonds.",
-              keywords: ["build in public", "gym membership cap"],
-              postingTime: "Thursday 10:00 AM EST",
-              targetAudience: "Tech founders, wellness professionals, local builders",
-              carousel: ["Tweet 1: Capping memberships", "Tweet 2: Premium recovery focus", "Tweet 3: Tech stack integration"],
-              story: "N/A",
-              reel: "N/A",
-              longCaption: "Traditional gyms sell access. We sell integration. A thread on how we are leveraging modern technology (Supabase, Lovable) to build a seamless booking and progress tracking app for our physical location, keeping member acquisition costs low and lifetime value high.",
-              shortCaption: "Building the anti-gym in public. Capped memberships. Premium recovery.",
-              thumbnailIdea: "High-contrast architectural layout blueprint",
-              videoDescription: "N/A",
-              charCount: 200,
-              score: 87
-            }
-          ]
-        },
-        {
-          platform: "Pinterest",
-          ideas: [
-            {
-              caption: "Modern organic gym interiors. Cozy lounge areas, sleek saunas, and functional minimalist workout zones. Aesthetic fitness inspiration for your wellness routine. #GymDesign #WellnessStudio",
-              hook: "Cozy minimalist wellness studio interiors.",
-              hooks: ["Gym aesthetic goals.", "Modern sauna and plunge layouts."],
-              cta: "Pin to your fitness inspiration board.",
-              hashtags: ["#GymAesthetic", "#SaunaDesign", "#MinimalistGym"],
-              seoTitle: "Minimalist Gym & Wellness Studio Design",
-              seoDescription: "Explore minimalist design ideas for wellness centers and boutique gyms. Sauna, plunge, and lounge setup.",
-              keywords: ["gym interiors", "wellness design", "cozy gym"],
-              postingTime: "Saturday 3:00 PM EST",
-              targetAudience: "Design-focused fitness enthusiasts",
-              carousel: ["Pin 1: Lounge design", "Pin 2: Gym floor layout", "Pin 3: Recovery room"],
-              story: "Aesthetic walkthrough of materials",
-              reel: "Aesthetic slow pans of the construction phase.",
-              longCaption: "Inside the design philosophy of Anchor Wellness Collective. We chose natural materials, warm lighting, and minimalist setups to reduce stress hormones (cortisol) and create a space that feels like a home sanctuary rather than a sterile warehouse.",
-              shortCaption: "Warm minimalist gym interiors. Click for more wellness inspiration.",
-              thumbnailIdea: "Beautiful render of the community lounge area",
-              videoDescription: "Design render animation of the completed space.",
-              charCount: 160,
-              score: 82
-            }
-          ]
-        },
-        {
-          platform: "Reddit",
-          ideas: [
-            {
-              caption: "Why are there no 'third spaces' left in local neighborhoods that aren't bars or cafes? We're building a wellness collective that is capped at 350 members, combining strength training, saunas, plunges, and a work-friendly lounge. Here is our business model.",
-              hook: "Why are there no 'third spaces' left that aren't bars or cafes?",
-              hooks: ["How to build a local gym that doesn't suck.", "Capping our gym memberships to prevent overcrowding - business case."],
-              cta: "Would you pay a premium for a gym that caps membership to prevent crowds?",
-              hashtags: ["#r/smallbusiness", "#r/fitness"],
-              seoTitle: "Capping Gym Memberships - Business Model Analysis",
-              seoDescription: "Reddit discussion on capped membership pricing, retention rates, and community building.",
-              keywords: ["membership cap", "third space gym"],
-              postingTime: "Sunday 1:00 PM EST",
-              targetAudience: "Local neighborhood redditors, small business enthusiasts",
-              carousel: ["N/A"],
-              story: "N/A",
-              reel: "N/A",
-              longCaption: "Hey everyone, I wanted to share the math behind our upcoming neighborhood wellness space. Most gyms need thousands of members to pay rent because their prices are low and churn is high. By raising our price slightly and capping membership at 350, we maintain a premium experience, zero wait times, and strong retention. Here is the full financial breakdown...",
-              shortCaption: "Capping our gym membership at 350 to fix the third-space problem. Thoughts?",
-              thumbnailIdea: "Table of financials",
-              videoDescription: "N/A",
-              charCount: 280,
+              title: "Notice: Ward 5 Road Rehabilitation — Traffic Advisory",
+              body: "Citizens of Ward 5 are hereby informed that road rehabilitation work on the Kondapuram-HQ highway (23 km stretch) will commence from 15th October 2026 under PMGSY guidelines. The project is estimated to complete within 6 months. During construction, alternate route via Markapuram bypass is advised. For complaints or information, contact the Ward Office at 1800-XXX-XXXX.",
+              audience: "Residents of Ward 5, 7, and 12; daily commuters; commercial vehicle operators",
+              language: "English",
+              urgencyTag: "Important",
+              tags: ["#RoadRepair", "#Ward5", "#PMGSY", "#TrafficAdvisory"],
+              keyMessage: "Road repair starting October 15 — use alternate route via Markapuram bypass",
+              actionRequired: "Plan alternate travel routes; report construction issues to Ward Office helpline",
+              formalVersion: "The Honorable Member of Parliament's office, in coordination with the District Collector and PWD, announces the commencement of PMGSY-funded road rehabilitation works on NH-segment Kondapuram-HQ. Citizens are requested to cooperate during the construction period.",
+              simplifiedVersion: "Good news! Our Ward 5 road is getting fixed starting October 15. It will take about 6 months. Please use the Markapuram bypass road during this time. Call 1800-XXX-XXXX if you have any problems.",
+              charCount: 420,
               score: 92
             }
           ]
         },
         {
-          platform: "YouTube",
-          ideas: [
+          channel: "Press Release",
+          entries: [
             {
-              caption: "How we built and launched a neighborhood wellness startup in under 6 months. Detailed walkthrough of site selection, leasing, pre-sale strategy, and facility build-out.",
-              hook: "Building a local wellness startup from scratch.",
-              hooks: ["The math behind a capped membership gym.", "Walkthrough of our modern recovery center build-out."],
-              cta: "Subscribe for weekly episodes of our build in public journey.",
-              hashtags: ["#GymStartup", "#BusinessVlog", "#BoutiqueFitness"],
-              seoTitle: "How to Build a Modern Gym Startup (Under 6 Months)",
-              seoDescription: "Step-by-step vlog detailing the construction, marketing, and leasing of a modern wellness studio.",
-              keywords: ["gym business", "startup vlog", "how to open a gym"],
-              postingTime: "Friday 5:00 PM EST",
-              targetAudience: "Fitness entrepreneurs and local builders",
-              carousel: ["N/A"],
-              story: "Teaser clip of the episode",
-              reel: "N/A",
-              longCaption: "In this video, we take you behind the scenes of Anchor Wellness Collective. We cover the lease negotiations, why we decided to lease equipment instead of buying it cash, our target demographics, and the exact marketing funnel we used to sign up 100 members before the drywall was finished. Watch till the end for the full sheet breakdown.",
-              shortCaption: "How we launched a local gym startup. Subscribe for the full journey.",
-              thumbnailIdea: "Split screen of empty warehouse vs completed luxury gym lounge",
-              videoDescription: "Detailed startup journey and financials breakdown of the collective.",
-              charCount: 250,
-              score: 89
-            }
-          ]
-        },
-        {
-          platform: "YouTube Shorts",
-          ideas: [
-            {
-              caption: "The commercial gym model relies on you staying home. Here's how we're changing that. #businesshacks #gymculture #startup",
-              hook: "The dirty secret of commercial gyms.",
-              hooks: ["Why we cap our memberships at 350.", "Gym pricing explained."],
-              cta: "Subscribe for more fitness startup business breakdowns.",
-              hashtags: ["#Shorts", "#GymIndustry", "#SmallBusiness"],
-              seoTitle: "The Gym Industry's Dirty Secret",
-              seoDescription: "Short video explaining gym overselling business models vs capped memberships.",
-              keywords: ["gym secrets", "business shorts"],
-              postingTime: "Daily 12:00 PM EST",
-              targetAudience: "Gen Z & Millennial health consumers",
-              carousel: ["N/A"],
-              story: "N/A",
-              reel: "N/A",
-              longCaption: "Did you know budget gyms oversell their space by 1000%? They pray you don't show up. At Anchor Wellness Collective, we cap our membership at 350. We want you to show up, connect, and recover. It's the anti-commercial gym model.",
-              shortCaption: "Budget gyms oversell. We cap. Subscribe to see how we did it.",
-              thumbnailIdea: "Founders reacting to a chart showing gym churn rates",
-              videoDescription: "A 45s fast breakdown of boutique gym economics vs franchise clubs.",
-              charCount: 150,
-              score: 93
-            }
-          ]
-        },
-        {
-          platform: "TikTok",
-          ideas: [
-            {
-              caption: "POV: You found a local gym that has a private sauna, cold plunge, and caps membership so it's never crowded. 🧴💆‍♀️ #wellness #gymtok #aestheticgym #morningroutine",
-              hook: "The aesthetic local gym you didn't know you needed.",
-              hooks: ["A gym that actually wants you to show up.", "POV: Your gym routine includes a cold plunge and lounge working space."],
-              cta: "Link in bio to join waitlist for founding spots.",
-              hashtags: ["#AestheticGym", "#ColdPlunge", "#SaunaRoutine", "#SelfCare"],
-              seoTitle: "Boutique Aesthetic Wellness Gym Tour",
-              seoDescription: "Discover the most aesthetic neighborhood gym featuring a luxury recovery suite and capped memberships.",
-              keywords: ["aesthetic gym", "gymtok", "morning wellness"],
-              postingTime: "Tuesday 7:30 AM EST (Morning routine peak)",
-              targetAudience: "Wellness lifestyle creators, Gen Z/Millennial morning routines",
-              carousel: ["N/A"],
-              story: "Behind the scenes aesthetic coffee pour in the lounge",
-              reel: "N/A",
-              longCaption: "This is what a gym should feel like. Warm wood, natural light, no lines, and a community of people who care about health inside and out. Welcome to Anchor Wellness Collective. We are opening pre-sales this week for founding members.",
-              shortCaption: "The gym of your dreams is opening. Capped membership. Link in bio.",
-              thumbnailIdea: "Aesthetic shot of cold plunge ripples",
-              videoDescription: "POV aesthetic morning routine at the collective.",
-              charCount: 170,
+              title: "MP Announces ₹19.3 Cr Development Package for Prakasam District",
+              body: "The Honorable Member of Parliament today announced a comprehensive ₹19.3 Crore development package for Prakasam District, covering road infrastructure (₹8.5 Cr), water supply (₹2.1 Cr), healthcare (₹3.2 Cr), education (₹1.8 Cr), sanitation (₹2.5 Cr), and digital connectivity (₹1.2 Cr). The package converges MPLADS funds with central schemes including PMGSY, Jal Jeevan Mission, and Swachh Bharat Mission-Gramin to maximize impact. Speaking at the announcement, the MP said: 'Every rupee will be tracked through a public monitoring dashboard. Citizens can see exactly where their tax money is being spent.'",
+              audience: "Media houses, district administration, state government officials, general public",
+              language: "English",
+              urgencyTag: "Newsworthy",
+              tags: ["#DevelopmentPackage", "#MPLADS", "#PrakasamDistrict"],
+              keyMessage: "₹19.3 Cr multi-sector development package announced with full transparency",
+              actionRequired: "Media: Cover the announcement; Citizens: Track projects on monitoring dashboard",
+              formalVersion: "Press Release No. MP/PD/2026/47 — For Immediate Release — The Office of the Member of Parliament, Prakasam Constituency...",
+              simplifiedVersion: "Big news! Our MP has approved ₹19.3 Crore for fixing roads, water, hospitals, schools, and drainage in our area. You can track all projects online.",
+              charCount: 680,
               score: 95
             }
           ]
         },
         {
-          platform: "Medium",
-          ideas: [
+          channel: "Social Media Post",
+          entries: [
             {
-              caption: "Reclaiming the Third Space: Why Local Gyms Must Evolve Beyond Exercise. An in-depth essay on urban design, community loneliness, and wellness.",
-              hook: "Why is it so hard to find a community space that isn't a bar?",
-              hooks: ["Loneliness in the digital age: Can local health hubs save us?", "Why boutique fitness is replacing the traditional community center."],
-              cta: "Read the full essay on Medium and share your thoughts.",
-              hashtags: ["#ThirdSpace", "#Community", "#MentalHealth", "#Urbanism"],
-              seoTitle: "The Evolution of the Gym: Reclaiming the Third Space",
-              seoDescription: "An essay exploring how fitness centers are evolving into community health collectives to solve the loneliness epidemic.",
-              keywords: ["third spaces", "community fitness", "wellness economy"],
-              postingTime: "Sunday 9:00 AM EST",
-              targetAudience: "Intellectual health consumers, urbanists, and sociologists",
-              carousel: ["N/A"],
-              story: "N/A",
-              reel: "N/A",
-              longCaption: "The structural breakdown of local communities has left a void. Cafes and bars are transactional. The gym, traditionally focused on physical output, is uniquely positioned to become the new community 'third space'—integrating fitness, recovery, work, and social connection. Here is how we are building Anchor Wellness Collective to lead this movement...",
-              shortCaption: "Can local gym collectives solve the loneliness epidemic? Read the essay.",
-              thumbnailIdea: "Artistic black and white photo of people chatting in a lounge",
-              videoDescription: "N/A",
-              charCount: 260,
-              score: 91
+              title: "Ward 5 Road Work Update — Week 3",
+              body: "🚧 Progress Update: Ward 5 Road Rehabilitation\n\n✅ 3.2 km of base layer completed\n✅ 4 culverts installed\n🔄 Next week: Tar laying begins on Kondapuram main road\n\nTimeline: On track for March 2027 completion\nBudget utilized: ₹1.2 Cr of ₹8.5 Cr\n\nReport issues: 1800-XXX-XXXX\n\n#Ward5 #RoadRepair #ProgressUpdate #PrakasamDevelopment",
+              audience: "Ward 5 residents, social media followers, local journalists",
+              language: "English",
+              urgencyTag: "Update",
+              tags: ["#Ward5", "#RoadRepair", "#ProgressUpdate", "#PrakasamDevelopment"],
+              keyMessage: "Road work is progressing on schedule — 3.2 km completed in 3 weeks",
+              actionRequired: "Share update with neighbors; report any construction issues to helpline",
+              formalVersion: "Weekly Progress Report: Kondapuram-HQ Highway Rehabilitation — Week 3 status...",
+              simplifiedVersion: "Road work update! 3.2 km done in Ward 5. Tar road coming next week. Call 1800-XXX-XXXX for any problems.",
+              charCount: 340,
+              score: 88
             }
           ]
         },
         {
-          platform: "Substack",
-          ideas: [
+          channel: "Ward Update",
+          entries: [
             {
-              caption: "Anchor Wellness Weekly: Navigating Hybrid Longevity. Tips on training, recovery protocols, and building a neighborhood wellness collective from the ground up.",
-              hook: "How to structure your week for longevity and recovery.",
-              hooks: ["Building the anti-gym business: Week 12 updates.", "Sauna vs Cold Plunge: What science says about the sequence."],
-              cta: "Subscribe to our free newsletter for weekly research and building updates.",
-              hashtags: ["#Substack", "#Longevity", "#BoutiqueBusiness"],
-              seoTitle: "Anchor Wellness Weekly - Fitness & Longevity Newsletter",
-              seoDescription: "Weekly research, tips on health optimization, and behind the scenes updates of our wellness startup.",
-              keywords: ["health newsletter", "recovery protocols", "longevity"],
-              postingTime: "Thursday 8:00 AM EST",
-              targetAudience: "Health-focused readers, longevity enthusiasts, local members",
-              carousel: ["N/A"],
-              story: "N/A",
-              reel: "N/A",
-              longCaption: "Welcome back to Anchor Wellness Weekly. This week, we cover the exact protocols for recovery that we are building into our facility. Why we are installing custom commercial infrared saunas, how to sequence hot-cold therapy, and the physiological benefits of social fitness compared to solo training. Read the full post below...",
-              shortCaption: "New newsletter post: Hot-Cold therapy protocols. Subscribe free.",
-              thumbnailIdea: "Warm orange glow from a sauna window",
-              videoDescription: "N/A",
-              charCount: 220,
-              score: 89
-            }
-          ]
-        },
-        {
-          platform: "Telegram",
-          ideas: [
-            {
-              caption: "📢 Pre-sales for Anchor Wellness Collective are officially starting tomorrow at 9 AM. Slots are capped at 350. Active members get priority. Waitlist link below: [Link] #announcement",
-              hook: "Pre-sale announcement: 24 hours to launch.",
-              hooks: ["Urgent: Capped memberships opening soon.", "Exclusive: Founding member rate details."],
-              cta: "Join the announcement channel and pin this post to not miss the signup link.",
-              hashtags: ["#PreSale", "#AnchorCollective"],
-              seoTitle: "Telegram Announcement - Pre-sale",
-              seoDescription: "Priority booking links and updates for Anchor Wellness Collective pre-sales.",
-              keywords: ["presale link", "gym registration"],
-              postingTime: "Wednesday 8:00 PM EST (Pre-launch evening)",
-              targetAudience: "Highly interested waitlist signups",
-              carousel: ["N/A"],
-              story: "N/A",
-              reel: "N/A",
-              longCaption: "We will release the signup link to this channel exactly at 9:00 AM. Remember, spots are strictly capped at 350 and we expect the founding tier to sell out within 15 minutes. Ensure your payment details are ready to secure the 20% lifetime discount.",
-              shortCaption: "Pre-sale opens in 24 hours. Pin this post to secure your spot.",
-              thumbnailIdea: "High contrast countdown banner",
-              videoDescription: "N/A",
-              charCount: 160,
-              score: 94
-            }
-          ]
-        },
-        {
-          platform: "Discord",
-          ideas: [
-            {
-              caption: "@here Founding Members Channel is now live! Introduce yourself in #introductions and check #announcements for details on our private launch party.",
-              hook: "Founding member Discord is officially open.",
-              hooks: ["Welcome to the collective community space.", "Introduce yourself to the neighborhood."],
-              cta: "Jump in #introductions and tell us: What's your fitness goal this quarter?",
-              hashtags: ["#Launch", "#DiscordCommunity"],
-              seoTitle: "Discord Hub - Anchor Wellness",
-              seoDescription: "Join the private chat server for Anchor Wellness Collective members.",
-              keywords: ["discord server", "member portal"],
-              postingTime: "Launch Day 10:00 AM EST",
-              targetAudience: "Registered members and local health leaders",
-              carousel: ["N/A"],
-              story: "N/A",
-              reel: "N/A",
-              longCaption: "This Discord server will act as our digital third space. Use the channels to find workout partners, coordinate running clubs, share recipe ideas in #nutrition, and get direct updates from the training staff. We're excited to have you all here.",
-              shortCaption: "Discord is live! Join the private community server today.",
-              thumbnailIdea: "Discord welcome logo",
-              videoDescription: "N/A",
-              charCount: 180,
-              score: 93
-            }
-          ]
-        },
-        {
-          platform: "WhatsApp Channel",
-          ideas: [
-            {
-              caption: "Good morning Collective! ☀️ Pre-sale tier 1 is officially sold out. We have opened 25 more spots for Tier 2 founding memberships before general admission opens. Grab yours here: [Link]",
-              hook: "Pre-sale update: Tier 1 SOLD OUT.",
-              hooks: ["25 spots left in our founding tier.", "Pre-sale link update."],
-              cta: "Tap the link to secure your Tier 2 spot.",
-              hashtags: ["#AnchorWellness", "#PreSaleUpdate"],
-              seoTitle: "WhatsApp Announcement - Presale Update",
-              seoDescription: "Live updates and link distributions for Anchor Wellness Collective pre-sales.",
-              keywords: ["whatsapp gym link", "pre-sale update"],
-              postingTime: "Thursday 10:30 AM EST",
-              targetAudience: "Active neighborhood prospects",
-              carousel: ["N/A"],
-              story: "N/A",
-              reel: "N/A",
-              longCaption: "Thank you all for the incredible support. We sold out our first 100 spots in under 20 minutes. Due to the high demand, our team has released 25 final Tier 2 spots before we close the pre-launch phase. Click below to register.",
-              shortCaption: "Tier 1 sold out. Grab one of the last 25 Tier 2 spots now.",
-              thumbnailIdea: "Success sold out stamp graphic",
-              videoDescription: "N/A",
-              charCount: 150,
-              score: 92
-            }
-          ]
-        },
-        {
-          platform: "Blog",
-          ideas: [
-            {
-              caption: "The Physiology of Hot-Cold Therapy: How to Maximize Recovery at the Gym. Read our complete guide on sequencing saunas and cold plunges.",
-              hook: "How to use saunas and cold plunges for optimal recovery.",
-              hooks: ["Are you sequencing your recovery wrong?", "The science of temperature contrast therapy in local fitness."],
-              cta: "Read the full scientific guide on our neighborhood blog.",
-              hashtags: ["#ContrastTherapy", "#SaunaScience", "#ColdPlungeGuide"],
-              seoTitle: "Hot-Cold Contrast Therapy Guide: Sauna and Plunge Sequence",
-              seoDescription: "Learn the exact scientific protocol for hot-cold contrast therapy. How long to spend in the sauna vs cold plunge for muscle recovery.",
-              keywords: ["contrast therapy", "sauna sequence", "cold plunge recovery", "active recovery"],
-              postingTime: "Monday 9:00 AM EST",
-              targetAudience: "Detail-oriented health consumers and active members",
-              carousel: ["N/A"],
-              story: "N/A",
-              reel: "N/A",
-              longCaption: "In this blog post, we break down contrast therapy. We look at vasodilation and vasoconstriction, how temperature shifts affect inflammation, and the optimal timing: 15 minutes in a 180°F dry sauna followed by 3 minutes in a 45°F cold plunge, repeated 3 times. We explain why we designed our recovery room to facilitate this exact flow.",
-              shortCaption: "How to sequence saunas and plunges correctly. Read our guide.",
-              thumbnailIdea: "Detailed infographics of contrast therapy blood flow",
-              videoDescription: "N/A",
-              charCount: 260,
+              title: "Monthly Development Report — Ward 5, June 2026",
+              body: "Dear residents of Ward 5, here is your monthly development update:\n\n1. ROAD REPAIR: DPR approved for 23 km highway rehabilitation. Contractor mobilization begins July 15.\n2. WATER SUPPLY: 4 new bore wells sanctioned. Survey completed, drilling to start August 1.\n3. SCHOOLS: Roof repair for 3 schools approved under Samagra Shiksha. Materials procurement underway.\n4. HEALTHCARE: Request submitted to state health department for permanent doctor posting at Markapuram PHC.\n5. DRAINAGE: SBM-G Phase II proposal submitted for closed drainage in Kondapuram village.\n\nNext Jan Sunwai: July 20, 2026 at Kondapuram Community Hall, 10:00 AM\nYour voice matters. Please attend.",
+              audience: "All residents of Ward 5",
+              language: "English",
+              urgencyTag: "Monthly",
+              tags: ["#Ward5", "#MonthlyUpdate", "#Development"],
+              keyMessage: "5 major projects moving forward in Ward 5 — attend Jan Sunwai on July 20",
+              actionRequired: "Attend the Jan Sunwai public hearing on July 20 at Kondapuram Community Hall",
+              formalVersion: "Ward 5 Monthly Development Progress Report — Period: June 2026...",
+              simplifiedVersion: "Ward 5 news: Roads, water, schools, hospital, and drainage — all approved! Come to the public meeting on July 20 at Kondapuram Hall.",
+              charCount: 520,
               score: 90
             }
           ]
         },
         {
-          platform: "Email Newsletter",
-          ideas: [
+          channel: "Meeting Summary",
+          entries: [
             {
-              caption: "Subject: The third-space problem (and how we're solving it)\\n\\nHey [First Name],\\n\\nMost local neighborhoods lack a true 'third space'. We're building a wellness collective to bridge the gap...",
-              hook: "Subject: The third-space problem (and how we're solving it)",
-              hooks: ["Subject: Capping our memberships at 350 (Here's the math)", "Subject: How to design your optimal morning recovery protocol"],
-              cta: "Reply directly to this email to book your private tour of the collective.",
-              hashtags: ["#Newsletter", "#AnchorCollective"],
-              seoTitle: "Email Newsletter - Anchor Wellness Collective",
-              seoDescription: "Weekly newsletters sent to the Anchor Wellness community covering health and local events.",
-              keywords: ["email newsletter", "neighborhood update"],
-              postingTime: "Tuesday 7:00 AM EST (Morning email check)",
-              targetAudience: "Subscribers and warm pre-leads",
-              carousel: ["N/A"],
-              story: "N/A",
-              reel: "N/A",
-              longCaption: "Hey [First Name],\\n\\nBetween the demands of work and home life, we all need a third space—a welcoming neighborhood sanctuary where we can focus on physical health, mental clarity, and social connection without pressure. That is why we are capping Anchor Wellness Collective at 350 memberships. No crowds, no rushed classes, and no waiting for the recovery room. Read on to see the interior design reveals...",
-              shortCaption: "The third space you've been looking for. Pre-sales open today.",
-              thumbnailIdea: "Welcome banner image",
-              videoDescription: "N/A",
-              charCount: 280,
+              title: "Minutes: District Development Review Meeting — June 28, 2026",
+              body: "Meeting chaired by: Honorable MP, Prakasam Constituency\nAttendees: District Collector, Superintendent Engineer (PWD), Chief Medical Officer, District Education Officer, BDOs (15 blocks)\n\nKey Decisions:\n1. Road rehabilitation contractor to be finalized by July 10 — lowest bidder (L1) at ₹7.8 Cr accepted.\n2. Emergency bore well drilling ordered for 4 hamlets — district collector to release ₹45 lakh from contingency fund.\n3. State health department letter requesting 3 MBBS doctors dispatched — follow-up meeting scheduled July 15.\n4. School roof repairs: Materials list finalized, procurement through GeM portal initiated.\n5. Monthly ward-wise monitoring dashboard to be launched by August 1.\n\nNext meeting: July 28, 2026 at District Collectorate, 11:00 AM",
+              audience: "Government officials, block development officers, gram panchayat presidents",
+              language: "English",
+              urgencyTag: "Official",
+              tags: ["#MeetingSummary", "#DistrictReview", "#ActionItems"],
+              keyMessage: "5 key decisions taken — contractor finalized, emergency bore wells ordered",
+              actionRequired: "BDOs to submit ward-level progress reports by July 5; CMO to follow up on doctor recruitment",
+              formalVersion: "Minutes of the District Development Review Meeting held on June 28, 2026 at the Office of the Member of Parliament...",
+              simplifiedVersion: "Meeting summary: Road contractor selected, emergency water wells ordered, doctor request sent. Next meeting July 28.",
+              charCount: 640,
+              score: 87
+            }
+          ]
+        },
+        {
+          channel: "Government Report",
+          entries: [
+            {
+              title: "Quarterly Constituency Development Report — Q1 FY 2026-27",
+              body: "This quarterly report summarizes the development activities, fund utilization, and citizen engagement metrics for Prakasam Constituency during April-June 2026.\n\nHighlights:\n- 342 citizen complaints received and categorized\n- ₹2.3 Cr MPLADS funds utilized (46% of annual allocation)\n- 3 new projects sanctioned under central schemes\n- 4 Jan Sunwai public hearings conducted across 4 wards\n- Citizen satisfaction index: 34/100 (baseline established)\n\nChallenges:\n- Doctor recruitment for rural PHCs remains pending\n- Monsoon season delaying road construction timelines\n- Land acquisition issues in Ward 6 for drainage project\n\nOutlook:\n- Q2 focus: Road construction kickoff, bore well drilling, school repairs\n- Target: Improve citizen satisfaction to 50/100 by end of Q2",
+              audience: "State government, ministry offices, constituency office records",
+              language: "English",
+              urgencyTag: "Quarterly",
+              tags: ["#QuarterlyReport", "#MPLADS", "#DevelopmentMetrics"],
+              keyMessage: "342 complaints processed, ₹2.3 Cr utilized, citizen satisfaction at 34/100 — improvement plan in motion",
+              actionRequired: "Submit to state MP coordination office; archive in constituency development records",
+              formalVersion: "Quarterly Development Progress Report — Prakasam Parliamentary Constituency — Q1 FY 2026-27...",
+              simplifiedVersion: "First 3 months report: 342 complaints heard, ₹2.3 Crore spent, 3 new projects started. We are working to improve.",
+              charCount: 780,
               score: 91
+            }
+          ]
+        },
+        {
+          channel: "Citizen Advisory",
+          entries: [
+            {
+              title: "Advisory: Monsoon Preparedness — Stay Safe, Stay Informed",
+              body: "Dear citizens, with the monsoon season approaching, please take the following precautions:\n\n🌧️ ROADS: Avoid travel on Kondapuram-HQ highway during heavy rain until repair work is completed.\n💧 WATER: Store drinking water — supply may be intermittent during heavy rain periods. Boil water before consumption.\n🏥 HEALTH: Report any fever, diarrhea, or skin infections immediately to your nearest health center. Dengue and cholera risk increases during monsoon.\n📞 EMERGENCY: District Emergency Operations Center — 1077\n\nStay connected with your ward representative for real-time updates.",
+              audience: "All constituency residents, especially rural hamlet dwellers",
+              language: "English",
+              urgencyTag: "Advisory",
+              tags: ["#MonsoonSafety", "#CitizenAdvisory", "#PublicHealth"],
+              keyMessage: "Take monsoon precautions — avoid damaged roads, boil water, report illness early",
+              actionRequired: "Follow safety guidelines; call 1077 for emergencies",
+              formalVersion: "Monsoon Preparedness Advisory — Office of the Member of Parliament, Prakasam Constituency...",
+              simplifiedVersion: "Monsoon warning! Don't travel on bad roads in rain. Boil water before drinking. If sick, go to health center. Emergency: Call 1077.",
+              charCount: 450,
+              score: 93
+            }
+          ]
+        },
+        {
+          channel: "SMS Alert",
+          entries: [
+            {
+              title: "SMS: Ward 5 Road Work Notice",
+              body: "COMET CIVIC: Road repair work starts Oct 15 on Kondapuram road. Use Markapuram bypass. Helpline: 1800-XXX-XXXX. -MP Office",
+              audience: "All registered mobile numbers in Ward 5",
+              language: "English",
+              urgencyTag: "Alert",
+              tags: ["#SMS", "#RoadWork"],
+              keyMessage: "Road work starting — use alternate route",
+              actionRequired: "Share with family and neighbors",
+              formalVersion: "Official SMS from MP Office: Road rehabilitation notice...",
+              simplifiedVersion: "Road repair starts Oct 15 on Kondapuram road. Use other road. Call 1800-XXX-XXXX for help.",
+              charCount: 140,
+              score: 85
             }
           ]
         }
       ],
-      deliverables: [
-        { filename: "Social_Media_Pack.txt", content: "# Social Media Content Pack\\n\\nContains all your social posts." }
-      ],
-      detailedReport: `# Comprehensive Content Strategy & Calendar Guide
+      detailedReport: `# Comprehensive Communication Plan: Prakasam Constituency
 
-## Multi-Platform Content Architecture
-Modern digital presence requires adapting the core message to various platforms. For Anchor Wellness Collective, the core theme is "Reclaiming the Third Space through Fitness and Recovery." This strategy is executed across all 16 platforms with platform-specific hooks, formats, and audiences.
+## Overview
+This communication plan establishes a multi-channel civic engagement framework to keep citizens informed about development activities, gather feedback, and maintain transparency in fund utilization. The plan covers 8 communication channels with specific content calendars, translation workflows, and distribution strategies.
 
 ---
 
-## Content Calendar & Execution Strategy
-- **Mondays:** Focus on Education (science of recovery, contrast therapy, blog links).
-- **Tuesdays:** Focus on Community (member spotlights, behind-the-scenes building updates, morning routines).
-- **Wednesdays:** Focus on Philosophy & Culture (addressing gym overcrowding, third spaces, membership capping on Threads and Twitter).
-- **Thursdays:** Focus on Call-to-actions (waitlist openings, pre-sale discounts, newsletter signups).
-- **Fridays:** Focus on Long-form Media (YouTube startup vlogs, behind-the-scenes construction reels).
-- **Weekends:** Focus on Inspiration & Aesthetics (Pinterest design pins, Instagram lifestyle photography).
+## Communication Calendar
+| Week | Channel | Content | Language |
+|:---|:---|:---|:---|
+| Week 1 | Public Notice | Project commencement notices | English, Telugu, Hindi |
+| Week 1 | SMS Alert | Short alerts to registered numbers | Telugu, English |
+| Week 2 | Social Media | Progress updates with photos | English, Telugu |
+| Week 2 | Ward Update | Monthly ward-level reports | Telugu, English |
+| Week 3 | Press Release | Major announcement or milestone | English |
+| Week 3 | Meeting Summary | Review meeting minutes | English |
+| Week 4 | Government Report | Monthly/quarterly reports | English |
+| Ongoing | Citizen Advisory | Safety, health, seasonal alerts | Telugu, English, Hindi |
 
 ---
 
-## Best Practices
-1. **Never Post the Same Format Everywhere:** Adapt the caption length, formatting, and media to each network. Long-form analytical articles belong on Medium, fast POV trends on TikTok, and philosophical threads on X.
-2. **Prioritize Video Engagement:** Video is the dominant medium on Instagram, TikTok, and YouTube. Ensure every video has text overlays and a strong visual hook in the first 3 seconds.
-3. **Transparent Brand Journey:** Share the struggles, timelines, and costs of building the collective in public. Showing authenticity increases brand loyalty by up to 50%.
-4. **Strong, Singular CTAs:** Do not ask users to like, comment, subscribe, and visit the website in one post. Focus on a single clear action (e.g., "Join waitlist, link in bio").
+## Translation Guidelines
+All critical communications must be available in at least 2 languages:
+- **Primary**: Telugu (spoken by 78% of constituency residents)
+- **Secondary**: English (for official records and media)
+- **Tertiary**: Hindi (for migrant worker populations)
+- Automated translation via Google Translation API with manual review by district language coordinator
+- SMS alerts limited to 160 characters in Telugu script
 
 ---
 
-## Repurposing Suggestion Blueprint
-\\\`\\\`\\\`
-[ YouTube Vlog: How We Built the Studio ]
-          │
-          ├──► [ TikTok/Reel: 30s Quick Transformation Tour ]
-          ├──► [ X Thread: The Financial Breakdown of Capping Memberships ]
-          ├──► [ Blog Post: The Physiology of Contrast Therapy Facilities ]
-          └──► [ Newsletter: Weekly Update & Exclusive Interior Renderings ]
-\\\`\\\`\\\``
+## Distribution Strategy
+1. **Physical**: Notice boards at gram panchayat offices, schools, PHCs, and community halls
+2. **Digital**: WhatsApp broadcast lists (ward-wise), Facebook pages, Twitter/X, YouTube
+3. **Voice**: IVR system for illiterate citizens — dial 1800-XXX-XXXX for recorded updates
+4. **Media**: Press releases to 12 district newspapers and 3 regional TV channels
+5. **Community**: Announcements during gram sabha meetings and Jan Sunwai hearings
+
+---
+
+## Accessibility Plan
+- Large-print versions of public notices for elderly citizens
+- Audio recordings of notices played through village loudspeakers
+- Sign language interpreter at all public hearings
+- Simplified language versions (6th-grade reading level) for all citizen-facing content`,
+      deliverables: []
     },
     development: {
-      htmlGeneratorText: "Your HTML landing page has been generated and is ready to download.",
-      architectureDescription: "The Anchor Wellness Collective digital platform will be a modern, community-focused web application designed to manage memberships, facilitate class bookings, and provide a personalized experience for members.",
-      recommendedStack: [
-        { name: "Lovable", description: "UI Builder / Design System", url: "https://lovable.dev" },
-        { name: "Supabase", description: "Database & Backend-as-a-Service (BaaS)", url: "https://supabase.com" }
+      dataOverview: "Analysis of 14 government datasets covering infrastructure, demographics, and public services across Prakasam District. Data sources include Census India 2021, PMGSY road inventory, Jal Jeevan Mission dashboard, UDISE+ school database, and National Health Mission facility records.",
+      infrastructureAnalysis: "The district has 847 km of roads, of which 34% (288 km) are in poor condition. 156 villages have piped water supply, while 42 hamlets rely on bore wells or hand pumps. 5 Primary Health Centers serve the constituency, with 3 operating at reduced capacity due to staff vacancies. 89 government schools serve 12,400 students, with 12 requiring structural repairs.",
+      dataSources: [
+        { name: "Census India 2021", description: "Population, demographics, literacy, occupation data", url: "https://censusindia.gov.in" },
+        { name: "Data.gov.in", description: "Open Government Data — schemes, budgets, infrastructure", url: "https://data.gov.in" },
+        { name: "PMGSY OMMAS", description: "Road connectivity status and project tracking", url: "https://omms.nic.in" },
+        { name: "Jal Jeevan Mission Dashboard", description: "Water supply coverage and connection data", url: "https://jaljeevanmission.gov.in" },
+        { name: "UDISE+ Portal", description: "School infrastructure, enrollment, and teacher data", url: "https://udiseplus.gov.in" },
+        { name: "National Health Mission", description: "Healthcare facility inventory and staff positions", url: "https://nhm.gov.in" }
       ],
-      htmlPrototype: `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Anchor Wellness Collective - Local Hub for Holistic Health & Connection</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: "Plus Jakarta Sans", sans-serif; }
-    .gradient-text { background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  </style>
-</head>
-<body class="bg-slate-50 text-slate-900 overflow-x-hidden pt-20">
-  <!-- Navbar -->
-  <nav class="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md border-b border-slate-100 z-50 transition-all duration-300">
-    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-      <a href="#" class="flex items-center gap-3 group">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-sky-200/50 group-hover:scale-105 transition-transform">A</div>
-        <span class="font-extrabold text-xl bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">Anchor Wellness</span>
-      </a>
-      <div class="hidden md:flex items-center gap-8">
-        <a href="#features" class="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">Features</a>
-        <a href="#about" class="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">About</a>
-        <a href="#pricing" class="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">Pricing</a>
-        <a href="#testimonials" class="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">Community</a>
-      </div>
-      <div class="hidden md:flex items-center gap-4">
-        <button class="text-sm font-bold text-slate-700 hover:text-slate-900 transition-colors">Sign In</button>
-        <button class="bg-slate-950 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-slate-950/10 hover:shadow-slate-950/20 hover:-translate-y-0.5 transition-all active:translate-y-0">Join Collective</button>
-      </div>
-    </div>
-  </nav>
+      demographicBreakdown: "Total constituency population: 2,83,450 (Census 2021). Urban: 18%, Rural: 82%. Male: 49.3%, Female: 50.7%. SC/ST population: 24.6%. Literacy rate: 67.2% (male: 74.1%, female: 60.5%). Working population: 58.4% (agriculture: 62%, services: 22%, industry: 16%).",
+      schoolsAnalysis: "89 government schools across the constituency. Student-teacher ratio: 32:1 (state average: 28:1). 12 schools flagged for structural repairs — roof damage, wall cracks, or foundation issues. 8 schools lack functional toilet facilities. Digital infrastructure: Only 14 schools (16%) have computer labs. Mid-day meal coverage: 94% of eligible students.",
+      roadsAnalysis: "Total road network: 847 km. National Highway: 45 km (good condition). State Highway: 112 km (23 km in poor condition). District Roads: 290 km (45% fair, 30% poor). Village Roads: 400 km (52% kutcha/unmetalled). PMGSY coverage: 78% of eligible habitations connected. Critical gaps: 8 villages remain unconnected by all-weather roads.",
+      hospitalsAnalysis: "Healthcare facilities: 5 Primary Health Centers, 2 Community Health Centers, 1 District Hospital. Doctor-to-population ratio: 1:8,200 (WHO recommended: 1:1,000). 3 PHCs operating without permanent doctors. Ambulance coverage: 2 vehicles for entire constituency — average response time: 45 minutes. Sub-center network: 28 sub-centers, 12 without ANM (Auxiliary Nurse Midwife) posting.",
+      populationInsights: "Population growth rate: 1.2% annually. Urbanization trend: 2% annual migration to district headquarters and Hyderabad. Youth (15-29) comprise 28% of population — 34% unemployed or underemployed. Elderly (60+): 11% of population, projected to reach 15% by 2031. Dependency ratio: 52 (52 dependents per 100 working-age adults).",
+      waterSupplyAnalysis: "Jal Jeevan Mission coverage: 62% of households with functional tap connections (state target: 100% by 2026). Groundwater dependency: 38% of households rely on bore wells or hand pumps. Water table depth: Average 45 meters (dropped from 30 meters in 2015). Fluoride contamination: Detected in 3 gram panchayats — requires RO treatment plants.",
+      electricityAnalysis: "Electrification: 97% household coverage. Power supply hours: Urban areas 22 hrs/day, rural areas 16 hrs/day. Agricultural feeders: 7 hrs/day. Solar pump installations: 145 (target: 500). Street lighting: 60% of village roads have functional street lights.",
+      geoMappingData: "GIS mapping reveals concentration of complaints in the southern belt of the constituency (Wards 5, 7, 12) which also corresponds to the areas with highest road damage, lowest water table, and longest distance to healthcare facilities. The northern wards (1, 2, 3) have relatively better infrastructure but face sanitation challenges.",
+      sanitationAnalysis: "ODF (Open Defecation Free) status: 14 of 15 wards certified. Individual Household Latrines (IHHL): 94% coverage. Community toilets: 23 functional, 8 non-functional. Solid waste management: Only 4 gram panchayats have door-to-door collection. Liquid waste: Open drainage in 6 wards — closed drainage in 3 wards only.",
+      connectivityAnalysis: "Mobile network coverage: 92% of constituency area. 4G availability: 78% (concentrated in urban and semi-urban areas). 4 gram panchayats in hilly terrain have no mobile coverage. Broadband: 12% household penetration. Common Service Centers: 8 operational (target: 15).",
+      budgetUtilization: "MPLADS fund utilization FY 2025-26: 72% (₹3.6 Cr of ₹5 Cr). State scheme convergence: ₹12.4 Cr sanctioned, ₹8.1 Cr released, ₹5.7 Cr utilized (46% utilization rate). Key bottleneck: Delayed administrative approvals and contractor mobilization.",
+      governmentSchemes: "Active central schemes: PMGSY (roads), JJM (water), SBM-G (sanitation), SSA (education), NHM (health), PMAY-G (housing), MGNREGA (employment). State schemes: Amma Vodi (education incentive), YSR Rythu Bharosa (farmer support), Jagananna Colonies (housing). Convergence opportunity: 4 schemes can be converged for Ward 5 multi-sector development.",
+      detailedReport: `# Comprehensive Public Data Analysis Report
 
-  <!-- Hero Section -->
-  <section class="relative min-h-[85vh] flex items-center justify-center px-6 py-20 overflow-hidden bg-gradient-to-b from-sky-50/50 via-white to-slate-50">
-    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-sky-100/30 via-transparent to-transparent pointer-events-none"></div>
-    <div class="max-w-5xl mx-auto text-center relative z-10 space-y-8">
-      <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-50 border border-sky-100 text-xs font-bold text-sky-700 uppercase tracking-wider">
-        ✨ Reclaiming the third space
-      </span>
-      <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 leading-tight">
-        Your Local Hub for <br>
-        <span class="gradient-text">Holistic Health & Connection</span>
-      </h1>
-      <p class="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-        Anchor Wellness Collective is a capped-membership neighborhood hub combining high-intensity strength training, premium saunas, cold plunges, and a social coworking lounge.
-      </p>
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-        <a href="#pricing" class="w-full sm:w-auto bg-slate-950 hover:bg-slate-800 text-white text-center px-8 py-4 rounded-xl font-bold shadow-xl shadow-slate-950/10 hover:-translate-y-0.5 transition-all">View Memberships</a>
-        <a href="#features" class="w-full sm:w-auto bg-white border border-slate-200 text-slate-700 text-center px-8 py-4 rounded-xl font-bold hover:bg-slate-50 transition-colors">Explore the space</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Features Grid -->
-  <section id="features" class="py-24 px-6 max-w-7xl mx-auto">
-    <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
-      <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900">What We Offer</h2>
-      <p class="text-slate-600">We provide everything you need to perform, recover, and connect under one roof.</p>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <div class="bg-white p-8 rounded-2xl border border-slate-200 hover:border-sky-300 transition-colors shadow-sm space-y-4">
-        <div class="w-12 h-12 rounded-xl bg-sky-50 flex items-center justify-center text-sky-600 font-bold text-lg">🏋️‍♂️</div>
-        <h3 class="text-xl font-bold text-slate-900">Functional Strength</h3>
-        <p class="text-slate-600 text-sm leading-relaxed">Group training classes led by professional coaches focusing on mobility, metabolic conditioning, and structured progression.</p>
-      </div>
-      <div class="bg-white p-8 rounded-2xl border border-slate-200 hover:border-sky-300 transition-colors shadow-sm space-y-4">
-        <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-lg">🧖‍♀️</div>
-        <h3 class="text-xl font-bold text-slate-900">Contrast Therapy</h3>
-        <p class="text-slate-600 text-sm leading-relaxed">State-of-the-art infrared saunas and cold plunge tubs designed to reduce inflammation, aid recovery, and boost energy levels.</p>
-      </div>
-      <div class="bg-white p-8 rounded-2xl border border-slate-200 hover:border-sky-300 transition-colors shadow-sm space-y-4">
-        <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold text-lg">☕</div>
-        <h3 class="text-xl font-bold text-slate-900">Social Lounge</h3>
-        <p class="text-slate-600 text-sm leading-relaxed">A cozy workspace with fast Wi-Fi and organic coffee, allowing you to transition smoothly from morning workout to remote workday.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Interactive Pricing Section -->
-  <section id="pricing" class="py-24 px-6 bg-slate-100/50 border-y border-slate-200/50">
-    <div class="max-w-7xl mx-auto">
-      <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
-        <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900">Flexible Memberships</h2>
-        <p class="text-slate-600 text-sm">No enrollment fees. No contracts. Adjust or cancel membership anytime online.</p>
-        <div class="inline-flex items-center bg-white p-1 rounded-xl border border-slate-200 mt-6">
-          <button id="monthly-btn" class="px-4 py-2 rounded-lg text-sm font-bold bg-slate-900 text-white transition-colors" onclick="togglePricing('monthly')">Monthly</button>
-          <button id="yearly-btn" class="px-4 py-2 rounded-lg text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors" onclick="togglePricing('yearly')">Yearly (Save 20%)</button>
-        </div>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-        <!-- Tier 1 -->
-        <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-8">
-          <div>
-            <h3 class="text-lg font-bold text-slate-900 mb-2">Basic Strength</h3>
-            <div class="flex items-baseline gap-1 mb-6">
-              <span class="text-4xl font-black text-slate-900" id="tier1-price">$99</span>
-              <span class="text-sm text-slate-500 font-semibold" id="tier1-period">/mo</span>
-            </div>
-            <ul class="space-y-4 text-sm text-slate-600">
-              <li class="flex items-center gap-3">✅ Unlimited Gym Floor Access</li>
-              <li class="flex items-center gap-3">✅ Basic Mobile Booking App</li>
-              <li class="flex items-center gap-3">❌ Recovery Suite Access</li>
-              <li class="flex items-center gap-3">❌ Co-working Lounge WiFi</li>
-            </ul>
-          </div>
-          <button class="w-full py-4 rounded-xl border border-slate-200 font-bold hover:bg-slate-50 transition-colors">Select Plan</button>
-        </div>
-        <!-- Tier 2 (Featured) -->
-        <div class="bg-white p-8 rounded-3xl border-2 border-sky-500 shadow-lg relative flex flex-col justify-between space-y-8 transform scale-105">
-          <span class="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-sky-500 text-white font-bold text-xs uppercase tracking-wider">Most Popular</span>
-          <div>
-            <h3 class="text-lg font-bold text-slate-900 mb-2">Collective Access</h3>
-            <div class="flex items-baseline gap-1 mb-6">
-              <span class="text-4xl font-black text-slate-900" id="tier2-price">$149</span>
-              <span class="text-sm text-slate-500 font-semibold" id="tier2-period">/mo</span>
-            </div>
-            <ul class="space-y-4 text-sm text-slate-600">
-              <li class="flex items-center gap-3">✅ Unlimited Strength Classes</li>
-              <li class="flex items-center gap-3">✅ 4 Sauna & Cold Plunge Sessions /mo</li>
-              <li class="flex items-center gap-3">✅ Co-working Lounge + Fast WiFi</li>
-              <li class="flex items-center gap-3">✅ Invites to Community Socials</li>
-            </ul>
-          </div>
-          <button class="w-full py-4 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold transition-all shadow-md shadow-sky-500/20">Select Plan</button>
-        </div>
-        <!-- Tier 3 -->
-        <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-8">
-          <div>
-            <h3 class="text-lg font-bold text-slate-900 mb-2">Ultimate Longevity</h3>
-            <div class="flex items-baseline gap-1 mb-6">
-              <span class="text-4xl font-black text-slate-900" id="tier3-price">$229</span>
-              <span class="text-sm text-slate-500 font-semibold" id="tier3-period">/mo</span>
-            </div>
-            <ul class="space-y-4 text-sm text-slate-600">
-              <li class="flex items-center gap-3">✅ Unlimited Strength + Recovery</li>
-              <li class="flex items-center gap-3">✅ Unlimited Sauna & Cold Plunge</li>
-              <li class="flex items-center gap-3">✅ Private Locker & Towel Service</li>
-              <li class="flex items-center gap-3">✅ 1 Guest Pass per month</li>
-            </ul>
-          </div>
-          <button class="w-full py-4 rounded-xl border border-slate-200 font-bold hover:bg-slate-50 transition-colors">Select Plan</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Testimonials -->
-  <section id="testimonials" class="py-24 px-6 max-w-5xl mx-auto">
-    <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
-      <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900">What Members Say</h2>
-      <p class="text-slate-600">Hear from local residents who found their wellness home with us.</p>
-    </div>
-    <div class="relative overflow-hidden bg-white rounded-3xl border border-slate-200 p-8 md:p-12 shadow-sm">
-      <div id="testimonial-box" class="transition-all duration-300 opacity-100 space-y-6">
-        <p class="text-lg text-slate-700 italic leading-relaxed" id="t-text">
-          "Anchor Wellness Collective completely changed how I think about going to the gym. It's not just about lifting weights; it's a neighborhood space where I can work out, relax in the sauna, and have coffee with friends. The capped membership makes a massive difference."
-        </p>
-        <div>
-          <div class="font-bold text-slate-900" id="t-author">Sarah Jenkins</div>
-          <div class="text-sm text-slate-500" id="t-title">Member since Pre-sale</div>
-        </div>
-      </div>
-      <div class="flex gap-2 mt-8 justify-end">
-        <button onclick="slideTestimonial('prev')" class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">◀</button>
-        <button onclick="slideTestimonial('next')" class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">▶</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="bg-slate-900 text-white py-16 px-6 border-t border-slate-800">
-    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
-      <div class="space-y-4">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-lg bg-sky-500 flex items-center justify-center text-white font-bold text-sm">A</div>
-          <span class="font-bold text-lg">Anchor Wellness</span>
-        </div>
-        <p class="text-slate-400 text-xs leading-relaxed">Capped-membership neighborhood fitness and recovery third-space.</p>
-      </div>
-      <div>
-        <h4 class="font-bold text-sm mb-4 text-slate-200">Explore</h4>
-        <ul class="space-y-2 text-xs text-slate-400">
-          <li><a href="#features" class="hover:text-white transition-colors">Our Space</a></li>
-          <li><a href="#pricing" class="hover:text-white transition-colors">Memberships</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">Recovery Systems</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="font-bold text-sm mb-4 text-slate-200">Community</h4>
-        <ul class="space-y-2 text-xs text-slate-400">
-          <li><a href="#" class="hover:text-white transition-colors">Discord Hub</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">Local Events</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">Newsletter Archive</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="font-bold text-sm mb-4 text-slate-200">Location & Hours</h4>
-        <p class="text-xs text-slate-400 leading-relaxed">104 Wellness Blvd, Neighborhood Suite B</p>
-        <p class="text-xs text-slate-400 mt-2">Mon - Fri: 6:00 AM - 9:00 PM<br>Sat - Sun: 7:00 AM - 5:00 PM</p>
-      </div>
-    </div>
-    <div class="max-w-7xl mx-auto border-t border-slate-800 mt-12 pt-8 text-center text-xs text-slate-500">
-      &copy; 2026 Anchor Wellness Collective. All rights reserved.
-    </div>
-  </footer>
-
-  <script>
-    function togglePricing(type) {
-      const monthlyBtn = document.getElementById("monthly-btn");
-      const yearlyBtn = document.getElementById("yearly-btn");
-      
-      const t1 = document.getElementById("tier1-price");
-      const t2 = document.getElementById("tier2-price");
-      const t3 = document.getElementById("tier3-price");
-      
-      if (type === "monthly") {
-        monthlyBtn.className = "px-4 py-2 rounded-lg text-sm font-bold bg-slate-900 text-white transition-colors";
-        yearlyBtn.className = "px-4 py-2 rounded-lg text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors";
-        t1.innerText = "$99";
-        t2.innerText = "$149";
-        t3.innerText = "$229";
-      } else {
-        yearlyBtn.className = "px-4 py-2 rounded-lg text-sm font-bold bg-slate-900 text-white transition-colors";
-        monthlyBtn.className = "px-4 py-2 rounded-lg text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors";
-        t1.innerText = "$79";
-        t2.innerText = "$119";
-        t3.innerText = "$179";
-      }
-    }
-
-    const testimonials = [
-      {
-        text: "Anchor Wellness Collective completely changed how I think about going to the gym. It's not just about lifting weights; it's a neighborhood space where I can work out, relax in the sauna, and have coffee with friends. The capped membership makes a massive difference.",
-        author: "Sarah Jenkins",
-        title: "Member since Pre-sale"
-      },
-      {
-        text: "The recovery room alone is worth the membership. Having commercial-grade saunas and cold plunges down the street has cut my recovery time in half, and I've met more neighbors here than in three years of living in the area.",
-        author: "David Miller",
-        title: "Active Runner & Member"
-      }
-    ];
-    let currentIndex = 0;
-    
-    function slideTestimonial(dir) {
-      if (dir === "next") {
-        currentIndex = (currentIndex + 1) % testimonials.length;
-      } else {
-        currentIndex = (currentIndex - 1 + testimonials.length) % testimonials.length;
-      }
-      document.getElementById("t-text").innerText = '"' + testimonials[currentIndex].text + '"';
-      document.getElementById("t-author").innerText = testimonials[currentIndex].author;
-      document.getElementById("t-title").innerText = testimonials[currentIndex].title;
-    }
-  </script>
-</body>
-</html>`,
-      detailedReport: `# Comprehensive Technical Workspace & Architecture Documentation
-
-## Technology Stack & Dependencies
-The Anchor Wellness Collective digital workspace uses a modern, light full-stack stack designed for reliability, fast load times, and simple local operations.
-- **UI & Frontend:** React 18, Vite, Tailwind CSS, Lucide Icons, Framer Motion.
-- **Backend & Database:** Supabase (BaaS), Postgres, SQL Rule-based Security (RLS).
-- **Automation & Scheduling:** Supabase Edge Functions, pg_cron.
-- **Development Tool:** Lovable.dev (AI UI Generator).
+## Data Sources Overview
+This analysis synthesizes data from 14 government databases and open data platforms to create a unified intelligence picture of the constituency's infrastructure, demographics, and development status. Key sources include Census India 2021, PMGSY OMMAS portal, Jal Jeevan Mission dashboard, UDISE+ school database, National Health Mission records, and Swachh Bharat Mission monitoring data.
 
 ---
 
-## Folder Structure
-\`\`\`
-src/
-├── components/
-│   ├── auth/
-│   │   └── Login.tsx
-│   ├── dashboard/
-│   │   ├── Sidebar.tsx
-│   │   └── Analytics.tsx
-│   ├── booking/
-│   │   ├── ClassGrid.tsx
-│   │   └── RecoveryScheduler.tsx
-│   └── ui/
-│       ├── Button.tsx
-│       └── Dialog.tsx
-├── lib/
-│   └── supabaseClient.ts
-├── types/
-│   └── index.ts
-├── main.tsx
-└── App.tsx
-\`\`\`
+## Demographic Analysis
+The constituency serves a predominantly rural population of 2,83,450 residents across 15 wards. With 82% rural population, development planning must prioritize village-level infrastructure. The SC/ST population (24.6%) requires targeted welfare scheme convergence. The literacy gender gap (13.6 percentage points) correlates with school infrastructure quality — wards with non-functional school toilets show the lowest female literacy rates.
 
 ---
 
-## Installation & How to Run
-1. **Clone the Repository:**
-   \`git clone https://github.com/collective/anchor-wellness.git && cd anchor-wellness\`
-2. **Install Dependencies:**
-   \`npm install\`
-3. **Configure Environment Variables:**
-   Create a \`.env.local\` file in the root directory:
-   \`\`\`
-   VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   \`\`\`
-4. **Run Development Server:**
-   \`npm run dev\`
-5. **Build for Production:**
-   \`npm run build\`
+## Infrastructure Status Dashboard
+| Sector | Coverage | Gap | Priority |
+|:---|:---|:---|:---|
+| Roads (all-weather) | 78% habitations | 8 villages unconnected | Critical |
+| Piped Water (JJM) | 62% households | 38% on groundwater | High |
+| Healthcare (PHC within 10km) | 72% population | 2 wards as health deserts | Critical |
+| Schools (structurally sound) | 87% schools | 12 needing repair | High |
+| Sanitation (ODF) | 93% wards | 1 ward not certified | Medium |
+| Electricity (22hr supply) | 18% (urban only) | Rural: 16 hrs/day | Medium |
+| Mobile Coverage | 92% area | 4 panchayats uncovered | Medium |
 
 ---
 
-## Backend & Database Setup
-Initialize the Postgres database schema by executing the following DDL in your Supabase SQL Editor:
-\`\`\`sql
--- Enable UUID extension
-create extension if not exists "uuid-ossp";
+## Correlation Analysis
+Cross-referencing citizen complaint data with infrastructure databases reveals strong correlations:
+- Wards with >30% poor-condition roads generate 3.2x more complaints than average
+- Hamlets without piped water supply report 2.8x higher health complaints
+- Schools without toilets show 40% higher girl dropout rates
+- Areas beyond 15 km from PHC report 4x more emergency evacuation requests
 
--- Create Members profiles table
-create table public.profiles (
-  id uuid references auth.users on delete cascade primary key,
-  full_name text not null,
-  membership_tier text default 'basic' check (membership_tier in ('basic', 'collective', 'ultimate')),
-  membership_status text default 'active',
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- Enable RLS
-alter table public.profiles enable row level security;
-
--- Create RLS Policies
-create policy "Users can read own profile" on public.profiles
-  for select using (auth.uid() = id);
-
-create policy "Users can update own profile" on public.profiles
-  for update using (auth.uid() = id);
-\`\`\`
+These correlations validate citizen complaints with objective infrastructure data, strengthening the case for prioritized intervention.
 
 ---
 
-## Deployment & Hosting Guide
-- **Frontend Hosting:** Vercel or Netlify is highly recommended for Vite-based React frontends. Connect your GitHub repository to trigger automatic branch previews on push.
-- **CI/CD Integration:** Set up GitHub Actions for automated linting and unit testing before merges to main.
-- **Production Checklist:** Enable Supabase SSL connections, configure database backups, and set up Google My Business indexing on the frontend landing page.
+## Geo-Mapping Insights
+GIS overlay of complaint density, infrastructure gaps, and demographic vulnerability identifies three priority zones:
+1. **Southern Belt (Wards 5, 7, 12):** Highest complaint density, worst road conditions, lowest water table
+2. **Eastern Corridor (Wards 9, 11):** Healthcare desert, highest emergency evacuation distances
+3. **Central Zone (Wards 1, 6):** Sanitation crisis, open drainage, disease outbreak history
 
 ---
 
-## Security & Performance Optimization
-- **Row Level Security (RLS):** Ensure RLS is active on all tables. Never access tables directly without checking auth state.
-- **Assets Optimization:** Compress all landing page photos to WebP format, lazy load route components using React.lazy, and bundle fonts locally.
-- **Security Check:** Set CORS origins to allow requests only from your production domain name inside Supabase API Settings.`,
+## Recommendations
+1. Prioritize southern belt for road and water interventions (highest citizen demand + worst infrastructure metrics)
+2. Establish mobile health units for eastern corridor as interim healthcare solution
+3. Fast-track drainage closure in central zone before monsoon season
+4. Deploy GIS-based monitoring dashboard for real-time project tracking`,
       deliverables: []
     },
     pitch: {
-      executiveSummary: "We're building the simplest way for small businesses to automate their operations using AI.",
-      slides: [
-        { title: "Anchor Wellness Collective", content: "Reclaiming the Third Space through Holistic Fitness & Community Contrast Therapy.", speakerNotes: "Welcome everyone. Today we are presenting the next evolution of local health hubs.", keyMetric: "350 Capped", keyMetricLabel: "Memberships" },
-        { title: "The Agenda", content: "- The Local Health Space Opportunity\\n- The Problem: Churn & Isolation\\n- Our Hybrid Solution\\n- Facility Architecture\\n- Tech Stack & App Flow\\n- Financial Forecast & Growth Roadmap", speakerNotes: "Here is what we will walk through today.", keyMetric: "15 Slides", keyMetricLabel: "Comprehensive Overview" },
-        { title: "The Problem", content: "- Modern commercial gyms are overcrowded, transactional, and suffer from high member churn (60%+ annually).\\n- Boutique studios are expensive and lack community, forcing members to leave immediately after training.\\n- Remote workers are isolated, lacking third-spaces to connect without bar environments.", speakerNotes: "The commercial gym space is broken. Operators focus on low costs and overselling.", keyMetric: "60%+", keyMetricLabel: "Annual Churn" },
-        { title: "Market Opportunity", content: "- Wellness economy is valued at $5.6T.\\n- Shift towards local neighborhood services due to remote/hybrid working models.\\n- 85% of Gen Z and Millennials prefer boutique experience over commercial chains.", speakerNotes: "A huge demographic is searching for something better.", keyMetric: "$5.6T", keyMetricLabel: "Wellness Market" },
-        { title: "Existing Solutions", content: "- Budget Gyms: Low cost, overcrowded, transactional, zero community.\\n- Luxury Clubs: Extremely expensive, centralized locations, lack hyper-local feel.\\n- Coworking Spaces: Good for work, lack health, wellness, and fitness integration.", speakerNotes: "Current solutions fail to bridge fitness, recovery, and connection.", keyMetric: "0 Tech", keyMetricLabel: "Community Alignment" },
-        { title: "Gap Analysis", content: "There is no local player combining strength training, dedicated hot-cold contrast therapy chambers, and remote work seating with capped membership, leaving a high-demand premium tier underserved.", speakerNotes: "This represents our primary market entry point.", keyMetric: "Capped 350", keyMetricLabel: "Market Gap Fill" },
-        { title: "Our Solution", content: "- Anchor Wellness Collective: A neighborhood third-space.\\n- Functional strength training classes led by expert coaches.\\n- Premium recovery suite featuring infrared saunas and cold plunges.\\n- Social lounge with fast Wi-Fi and healthy cafe choices.", speakerNotes: "We combine fitness, recovery, and work into a single hub.", keyMetric: "3-in-1", keyMetricLabel: "Unified Space" },
-        { title: "Facility Architecture", content: "- Capped capacity of 350 members ensures zero wait times.\\n- Zone A (60%): Functional workout floor.\\n- Zone B (20%): Sauna, plunge, and locker rooms.\\n- Zone C (20%): Welcome desk and coworking social lounge.", speakerNotes: "Our facility layout is optimized for community integration.", keyMetric: "3,500 sq ft", keyMetricLabel: "Aesthetic Hub" },
-        { title: "Technology Stack", content: "- Frontend mobile app built with React & Tailwind for simple reservations.\\n- Backend managed by Supabase for instantaneous database updates and auth.\\n- Automated SMS reminders and class progression tracking.", speakerNotes: "Our tech stack guarantees high user engagement.", keyMetric: "Vite + React", keyMetricLabel: "Modern Tech" },
-        { title: "Workflow", content: "1. Member books contrast session on the custom app\\n2. Smart lock opens locker and recovery room\\n3. Contrast session completed; check-in at coworking lounge\\n4. Automatic feedback loops track progress", speakerNotes: "The member experience is entirely frictionless.", keyMetric: "4 Steps", keyMetricLabel: "Frictionless Flow" },
-        { title: "Features", content: "- Real-time class capacity booking\\n- Contrast room temperature custom settings\\n- Member social messaging boards\\n- Longevity biometric progress dashboard", speakerNotes: "We offer feature sets that traditional gym goers can only dream of.", keyMetric: "1 Tap", keyMetricLabel: "Booking App" },
-        { title: "Live Demo", content: "- Mobile Class Booking Flow: Select class, view trainer profile, reserve spot.\\n- Recovery Suite Entry: Smart key integration, temperature monitor.", speakerNotes: "Let's look at the actual prototype interface.", keyMetric: "5 sec", keyMetricLabel: "Booking Speed" },
-        { title: "Competitive Analysis", content: "Our capped member cap enables us to focus 100% on premium retention. While commercial gyms spend heavily on acquisition, our customer acquisition cost is offset by member-to-member referral programs.", speakerNotes: "Our metrics are fundamentally better than high-turn models.", keyMetric: "3x Lower", keyMetricLabel: "Acquisition Cost" },
-        { title: "Business Model", content: "- Collective Tier: $149/month (includes group classes, coworking access, and 4 recovery sessions).\\n- Longevity Tier: $229/month (unlimited strength + recovery access).\\n- Secondary: Retail sales, workshops, and corporate packages.", speakerNotes: "We project operational profitability in month 5.", keyMetric: "28%", keyMetricLabel: "Operating Margin" },
-        { title: "Conclusion & Ask", content: "We are raising $250,000 to finalize the pilot location build-out and launch marketing. Join us in reclaiming the neighborhood third space.", speakerNotes: "Thank you. I will open the floor to any questions.", keyMetric: "$250K Ask", keyMetricLabel: "Seed Round" }
+      executiveSummary: "Based on analysis of 342 citizen complaints, 14 government datasets, and infrastructure gap assessments, the following 15 development projects are recommended in order of priority. Total estimated budget: ₹19.3 Crore. Implementation timeline: 24 months. Expected citizen satisfaction improvement: from 34/100 to 72/100.",
+      recommendations: [
+        {
+          projectName: "Kondapuram-HQ Highway Rehabilitation",
+          priorityScore: "96/100",
+          budgetEstimate: "₹8.5 Cr",
+          budgetEstimateLabel: "Estimated Cost",
+          impactSummary: "**Impact:** Repairs 23 km of critically damaged state highway connecting 12 villages to district headquarters.\n\n**Beneficiaries:** 45,000+ residents, 2,000+ daily commuters, 500+ commercial vehicles\n\n**Current Status:** 14 accidents reported in past year. Road impassable during monsoon.\n\n**Funding:** PMGSY central fund + State PWD maintenance budget convergence.",
+          implementationNotes: "Phase 1 (Months 3-8): Base layer and drainage for 12 km priority segment. Phase 2 (Months 8-12): Remaining 11 km with road markings and safety barriers. Contractor selection via e-tendering. Third-party quality audit at 25%, 50%, 75% completion.",
+          urgencyLabel: "Critical"
+        },
+        {
+          projectName: "Ward 5 Emergency Water Supply",
+          priorityScore: "92/100",
+          budgetEstimate: "₹2.1 Cr",
+          budgetEstimateLabel: "Estimated Cost",
+          impactSummary: "**Impact:** Installs 12 new bore wells and 3 overhead tanks in 6 hamlets facing acute water scarcity.\n\n**Beneficiaries:** 8,500 households (approximately 34,000 residents)\n\n**Current Status:** Water table dropped 15m in decade. Women walk 2-3 km daily for collection.\n\n**Funding:** Jal Jeevan Mission + MPLADS top-up.",
+          implementationNotes: "Emergency drilling to begin within 60 days for 4 most critical hamlets. Overhead tank construction: 4 months. Piped distribution network: 6 months. Rainwater harvesting structures at 8 locations for groundwater recharge.",
+          urgencyLabel: "Critical"
+        },
+        {
+          projectName: "Primary Health Center Staffing & Upgrade",
+          priorityScore: "89/100",
+          budgetEstimate: "₹3.2 Cr",
+          budgetEstimateLabel: "Estimated Cost",
+          impactSummary: "**Impact:** Establishes 2 new sub-health centers and recruits 3 permanent doctors for healthcare desert wards.\n\n**Beneficiaries:** 52,000 residents in Wards 9 and 11 currently without PHC access within 15 km.\n\n**Current Status:** Nearest hospital 28 km away. Emergency cases require ₹2,000-5,000 private ambulance costs.\n\n**Funding:** National Health Mission + State Health Department.",
+          implementationNotes: "Month 1: Submit recruitment request to state DMER. Month 2-4: Temporary mobile health unit deployment. Month 4-12: Sub-health center construction. Doctor incentive: 25% rural posting premium + government housing.",
+          urgencyLabel: "Critical"
+        },
+        {
+          projectName: "School Infrastructure Revival Program",
+          priorityScore: "85/100",
+          budgetEstimate: "₹1.8 Cr",
+          budgetEstimateLabel: "Estimated Cost",
+          impactSummary: "**Impact:** Repairs roofing for 12 schools and constructs toilet blocks in 8 schools.\n\n**Beneficiaries:** 4,200 students, with specific focus on reducing 40% girl dropout rate.\n\n**Current Status:** Classes suspended 30 days/year during monsoon due to leaking roofs. 8 schools without toilets.\n\n**Funding:** Samagra Shiksha Abhiyan + District Education Fund.",
+          implementationNotes: "Prioritize toilet construction in girls-only sections first. Roofing repairs during summer vacation (April-May) to minimize disruption. Materials procurement through GeM portal for transparency.",
+          urgencyLabel: "High"
+        },
+        {
+          projectName: "Ward 1 & 6 Closed Drainage Network",
+          priorityScore: "82/100",
+          budgetEstimate: "₹2.5 Cr",
+          budgetEstimateLabel: "Estimated Cost",
+          impactSummary: "**Impact:** Replaces open drains with closed drainage system, eliminating sewage overflow and disease outbreaks.\n\n**Beneficiaries:** 18,000 residents in Ward 1 and 6.\n\n**Current Status:** 3 cholera outbreaks in 18 months. Raw sewage enters residential areas during monsoon.\n\n**Funding:** SBM-G Phase II + NREGA convergence for labor.",
+          implementationNotes: "Design: Underground covered drains with soak pits. Construction: October-March (dry season). NREGA labor convergence reduces cost by 30%. Community ownership through gram panchayat maintenance committees.",
+          urgencyLabel: "High"
+        },
+        {
+          projectName: "Digital Village Connectivity",
+          priorityScore: "74/100",
+          budgetEstimate: "₹1.2 Cr",
+          budgetEstimateLabel: "Estimated Cost",
+          impactSummary: "**Impact:** Installs 4 mobile towers and establishes 6 Common Service Centers for e-governance access.\n\n**Beneficiaries:** 12,000 residents in 4 uncovered gram panchayats.\n\n**Current Status:** No mobile network, no internet — citizens must travel 15+ km for government services.\n\n**Funding:** BharatNet + CSR partnerships.",
+          implementationNotes: "Tower installation: Coordinate with BSNL/private operators via USOF subsidy. CSC setup: 2 months per center. Training: Digital literacy program for 500 residents in first year.",
+          urgencyLabel: "Medium"
+        },
+        {
+          projectName: "Rainwater Harvesting Structures",
+          priorityScore: "78/100",
+          budgetEstimate: "₹0.9 Cr",
+          budgetEstimateLabel: "Estimated Cost",
+          impactSummary: "**Impact:** Constructs 15 rainwater harvesting structures and 8 percolation tanks to recharge groundwater.\n\n**Beneficiaries:** All 6 water-scarce hamlets — long-term groundwater sustainability.\n\n**Funding:** MGNREGA + Watershed Development Fund.",
+          implementationNotes: "Site selection based on hydrogeological survey. Construction during pre-monsoon (May-June) for immediate monsoon capture. Community maintenance through water user associations.",
+          urgencyLabel: "High"
+        },
+        {
+          projectName: "Solar Agricultural Pump Program",
+          priorityScore: "72/100",
+          budgetEstimate: "₹1.5 Cr",
+          budgetEstimateLabel: "Estimated Cost",
+          impactSummary: "**Impact:** Installs 200 solar pumps for agricultural irrigation, reducing electricity dependency and costs.\n\n**Beneficiaries:** 200 farming households across 8 wards.\n\n**Funding:** PM-KUSUM scheme.",
+          implementationNotes: "Beneficiary selection through gram sabha. Installation: 30 days per batch of 50 pumps. Maintenance training for farmers.",
+          urgencyLabel: "Medium"
+        },
+        {
+          projectName: "Street Lighting Expansion",
+          priorityScore: "68/100",
+          budgetEstimate: "₹0.6 Cr",
+          budgetEstimateLabel: "Estimated Cost",
+          impactSummary: "**Impact:** Installs LED street lights on 120 km of village roads currently without lighting.\n\n**Beneficiaries:** Enhanced safety for 1.2 lakh rural residents, especially women and children.\n\n**Funding:** MPLADS + State Rural Development.",
+          implementationNotes: "Solar-powered LED lights preferred for areas with unreliable grid supply. Installation in phases: priority to school routes and PHC approach roads.",
+          urgencyLabel: "Medium"
+        },
+        {
+          projectName: "Community Health Awareness Campaign",
+          priorityScore: "65/100",
+          budgetEstimate: "₹0.3 Cr",
+          budgetEstimateLabel: "Estimated Cost",
+          impactSummary: "**Impact:** Conducts health camps, dengue/cholera prevention drives, and nutrition awareness in 15 wards.\n\n**Beneficiaries:** All constituency residents, focus on women and children.\n\n**Funding:** NHM operational budget + MP discretionary.",
+          implementationNotes: "Monthly health camps at each ward. ASHA worker training for disease surveillance. School-based nutrition programs.",
+          urgencyLabel: "Medium"
+        }
       ],
-      deliverables: [],
-      detailedReport: `# Master Investor Pitch Strategy & Presentation Script
+      detailedReport: `# Comprehensive MP Development Recommendation Report
 
-## Slide-by-Slide Script & Presenter Cues
-
-### Slide 1: Cover (Anchor Wellness Collective)
-*   **Slide Visual:** Warm minimalist background with brand logo.
-*   **Presenter Script:** "Good morning. My name is [Name], and today I am introducing Anchor Wellness Collective: the future of neighborhood third-spaces. We are combining functional training, premium recovery contrast rooms, and coworking lounges into a unified capped-membership hub."
-
----
-
-### Slide 2: The Agenda
-*   **Presenter Script:** "Today, we'll walk through the fitness industry gap, our unique hybrid solution, our facility design, backend tech stack, and our financial projections."
+## Scoring Methodology
+Each project is scored on a 100-point scale using 6 weighted criteria:
+1. **Citizen Demand (25%):** Volume and urgency of citizen complaints related to this issue
+2. **Population Impact (20%):** Number of direct beneficiaries as percentage of constituency population
+3. **Infrastructure Gap Severity (20%):** Gap between current status and national/state benchmark
+4. **Budget Feasibility (15%):** Availability of funding through convergence of central/state schemes
+5. **Implementation Readiness (10%):** Availability of DPRs, land, approvals, and contractor capacity
+6. **Urgency (10%):** Time sensitivity — monsoon risk, health emergency, safety hazard
 
 ---
 
-### Slide 3: The Problem (Loneliness & Gym Churn)
-*   **Presenter Script:** "Traditional gyms oversell. They rely on you not showing up. They are crowded, transactional, and experience a massive 60% annual churn rate. People are looking for a space to belong."
+## Budget Justification
+| Project | Budget (₹ Cr) | Funding Source | Cost Basis |
+|:---|:---|:---|:---|
+| Highway Rehabilitation | 8.5 | PMGSY + PWD | State SOR rates × 23 km |
+| Water Supply | 2.1 | JJM + MPLADS | ₹12L/bore well + ₹35L/OHT |
+| Healthcare | 3.2 | NHM + State | ₹80L/sub-center + staffing |
+| Education | 1.8 | SSA + District | ₹8L/roof + ₹12L/toilet block |
+| Sanitation | 2.5 | SBM-G + NREGA | ₹15L/km closed drainage |
+| Digital | 1.2 | BharatNet + CSR | ₹20L/tower + ₹5L/CSC |
 
 ---
 
-### Slide 4: Market Opportunity (The Shift to Local)
-*   **Presenter Script:** "With the hybrid remote-work models, consumers are spending their days in residential neighborhoods rather than city hubs. The wellness economy is $5.6T, and customers are demanding premium boutique experiences."
+## Implementation Roadmap
+### Phase 1 (Months 1-6): Emergency & Planning
+- Emergency bore well drilling in 4 critical hamlets
+- Road contractor selection and mobilization
+- PHC doctor recruitment request
+- DPR preparation for all remaining projects
+
+### Phase 2 (Months 7-12): Core Construction
+- Highway rehabilitation (12 km priority segment)
+- School roof repairs during summer vacation
+- Sub-health center foundation laying
+- Drainage design and tendering
+
+### Phase 3 (Months 13-18): Expansion
+- Highway completion (remaining 11 km)
+- Overhead tank construction and piped distribution
+- Drainage construction (pre-monsoon deadline)
+- Digital connectivity installations
+
+### Phase 4 (Months 19-24): Completion & Review
+- All projects commissioned
+- Citizen satisfaction re-survey
+- Monitoring dashboard live
+- Annual development report to Parliament
 
 ---
 
-### Slide 5: Existing Solutions (Competitive Landscape)
-*   **Presenter Script:** "Commercial chains are cheap but overcrowded. Luxury hubs are too expensive and centralized. We occupy the middle ground—high hospitality, capped capacity, right in the neighborhood."
-
----
-
-### Slide 6: Gap Analysis
-*   **Presenter Script:** "Our primary insight is simple: there is no local player combining strength training, dedicated hot-cold contrast therapy chambers, and remote work seating with capped membership, leaving a high-demand premium tier underserved."
-
----
-
-### Slide 7: Our Solution (The Collective Experience)
-*   **Presenter Script:** "Anchor Wellness Collective is that third-space. Fitness, recovery contrast rooms, and workspaces, unified under a capped membership of 350 to ensure no crowds."
-
----
-
-### Slide 8: Facility Design & Zones
-*   **Presenter Script:** "We need 3,500 square feet. 60% is functional strength gym space, 20% is recovery contrast suites, and 20% is welcome reception and social workspace."
-
----
-
-### Slide 9: Tech Stack & App Integration
-*   **Presenter Script:** "Our custom application allows members to book classes, reserve recovery rooms, and track biometrics. It keeps member engagement high."
-
----
-
-### Slide 10: Member Experience Flow
-*   **Presenter Script:** "Booking, facility entry, and checking in is completely frictionless, managed via our backend app connected to smart locks."
-
----
-
-### Slide 11: Feature Highlights
-*   **Presenter Script:** "Features include real-time class booking, recovery temperature customization, and social community message boards."
-
----
-
-### Slide 12: Live Demo Walkthrough
-*   **Presenter Script:** "Let's walk through a 5-second reservation flow. Select a class, tap book contrast therapy session, and secure your spot."
-
----
-
-### Slide 13: Competitive Advantage (Retention focus)
-*   **Presenter Script:** "Because we cap memberships, we focus on member satisfaction rather than constant marketing acquisition. Retention is 3x higher than budget chains."
-
----
-
-### Slide 14: Business Model & Margins
-*   **Presenter Script:** "We offer two main tiers: Collective Access at $149/mo and Ultimate Longevity at $229/mo. We forecast operational break-even by month 5."
-
----
-
-### Slide 15: Conclusion & Ask
-*   **Presenter Script:** "We are raising $250,000 for facility buildout and marketing. We invite you to join us in building the pilot neighborhood hub."`
+## Monitoring Framework
+1. **Real-time Dashboard:** GIS-based project tracking visible to citizens
+2. **Monthly Reviews:** District collector-level review with BDOs
+3. **Quarterly Reports:** Submission to state MP coordination office
+4. **Citizen Feedback:** Monthly Jan Sunwai hearings in rotating wards
+5. **Third-party Audit:** Independent quality audit at project milestones
+6. **Media Transparency:** Monthly social media progress updates with photos`
     }
   };
 

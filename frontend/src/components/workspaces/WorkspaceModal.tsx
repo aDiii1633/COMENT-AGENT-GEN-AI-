@@ -2,11 +2,11 @@ import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download, CheckCircle2, AlertTriangle, Clock } from 'lucide-react';
 import type { AgentResult } from '../../types/agents';
-import ResearchWorkspace from './ResearchWorkspace';
-import StrategyWorkspace from './StrategyWorkspace';
-import ContentWorkspace from './ContentWorkspace';
-import DevelopmentWorkspace from './DevelopmentWorkspace';
-import PitchWorkspace from './PitchWorkspace';
+import CitizenInsightsWorkspace from './ResearchWorkspace';
+import DevelopmentPlanningWorkspace from './StrategyWorkspace';
+import CommunicationWorkspace from './ContentWorkspace';
+import PublicDataWorkspace from './DevelopmentWorkspace';
+import RecommendationWorkspace from './PitchWorkspace';
 
 interface WorkspaceModalProps {
   isOpen: boolean;
@@ -75,15 +75,15 @@ export default function WorkspaceModal({
   const renderWorkspace = () => {
     switch (agentId) {
       case 'research':
-        return <ResearchWorkspace data={data} />;
+        return <CitizenInsightsWorkspace data={data} />;
       case 'strategy':
-        return <StrategyWorkspace data={data} />;
+        return <DevelopmentPlanningWorkspace data={data} />;
       case 'content':
-        return <ContentWorkspace data={data} />;
+        return <CommunicationWorkspace data={data} />;
       case 'development':
-        return <DevelopmentWorkspace data={data} />;
+        return <PublicDataWorkspace data={data} />;
       case 'pitch':
-        return <PitchWorkspace data={data} />;
+        return <RecommendationWorkspace data={data} />;
       default:
         return (
           <div className="p-12 text-center text-slate-400">

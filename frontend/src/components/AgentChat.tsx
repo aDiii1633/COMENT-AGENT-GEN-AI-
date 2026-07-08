@@ -17,17 +17,17 @@ export const AgentChat: React.FC = () => {
     {
       id: '1',
       role: 'agent',
-      content: 'Hello! I am the Strategy Agent. I have reviewed the market research. Shall we refine the 3-tier pricing model?',
+      content: 'Hello! I am the Development Planning Agent. I have reviewed the citizen insights from Ward 3. Shall we prioritize the infrastructure gap analysis?',
     },
     {
       id: '2',
       role: 'user',
-      content: 'Yes, please add a Free Tier with limited features.',
+      content: 'Yes, please focus on road repairs as the critical priority.',
     },
     {
       id: '3',
       role: 'agent',
-      content: 'Updating the Lean Canvas...\n\n### Pricing Strategy\n1. **Free Tier**: $0/mo. Limited to 5 deliveries.\n2. **Starter Tier**: $49/mo. Up to 100 deliveries.\n3. **Pro Tier**: $199/mo. Unlimited deliveries + priority support.',
+      content: 'Updating Development Plan...\n\n### Project Prioritization\n1. **Critical Priority**: Main Market Road Repair (Est. 45 days, ₹12 Lakhs)\n2. **High Priority**: Ward 3 Drainage Clearance (Est. 15 days, ₹3 Lakhs)\n3. **Medium Priority**: Public Park Lighting Installation.',
       isStreaming: true
     }
   ]);
@@ -55,7 +55,7 @@ export const AgentChat: React.FC = () => {
       const agentMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'agent',
-        content: `I've received your request: "${input}". Working on integrating this into the business strategy and updating the dynamic model.`,
+        content: `I've received your request: "${input}". Working on integrating this into the development strategy and updating the planning timeline.`,
       };
       setMessages(prev => [...prev, agentMsg]);
     }, 1000);
@@ -73,8 +73,8 @@ export const AgentChat: React.FC = () => {
             <span className="absolute bottom-0 right-0 w-3 h-3 bg-success border-2 border-white rounded-full"></span>
           </div>
           <div>
-            <h3 className="font-semibold text-text-primary">Strategy Agent</h3>
-            <p className="text-xs text-text-secondary">Refining Business Canvas</p>
+            <h3 className="font-semibold text-text-primary">Dev Planning Agent</h3>
+            <p className="text-xs text-text-secondary">Prioritizing Infrastructure</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -138,10 +138,10 @@ export const AgentChat: React.FC = () => {
         <div className="flex flex-wrap gap-2 pt-4">
           <span className="w-full text-xs text-text-secondary font-medium mb-1">Suggested Refinements:</span>
           <button className="text-xs px-3 py-1.5 rounded-full border border-border bg-white text-text-secondary hover:border-accent hover:text-accent transition-colors">
-            Make the Starter Tier cheaper
+            Include budget estimates
           </button>
           <button className="text-xs px-3 py-1.5 rounded-full border border-border bg-white text-text-secondary hover:border-accent hover:text-accent transition-colors">
-            Calculate estimated MRR
+            Draft timeline for approval
           </button>
         </div>
       </div>
@@ -158,7 +158,7 @@ export const AgentChat: React.FC = () => {
           <Input 
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Instruct the Strategy Agent..." 
+            placeholder="Instruct the Planning Agent..." 
             className="pl-12 pr-14 py-4 rounded-full bg-slate-50 border-transparent focus:bg-white focus:border-accent shadow-inner text-sm" 
           />
           <button 
@@ -169,7 +169,7 @@ export const AgentChat: React.FC = () => {
           </button>
         </form>
         <div className="text-center mt-2">
-          <span className="text-[10px] text-text-secondary">AI outputs can be inaccurate. Always verify business constraints.</span>
+          <span className="text-[10px] text-text-secondary">AI outputs can be inaccurate. Always verify government data manually.</span>
         </div>
       </div>
     </Card>

@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react';
-import { Search, LayoutGrid, Tag, Code2, MessageSquare, Check, Loader2 } from 'lucide-react';
+import { Users, Map, FileText, Database, Award, Check, Loader2 } from 'lucide-react';
 import type { AgentStatus } from '../types/agents';
 
 interface Agent {
@@ -9,19 +9,19 @@ interface Agent {
 }
 
 const agents: Agent[] = [
-  { id: 'research', name: 'Research Agent', icon: Search },
-  { id: 'strategy', name: 'Strategy Agent', icon: LayoutGrid },
-  { id: 'content', name: 'Content Agent', icon: Tag },
-  { id: 'development', name: 'Development Agent', icon: Code2 },
-  { id: 'pitch', name: 'Pitch Agent', icon: MessageSquare },
+  { id: 'research', name: 'Citizen Insights', icon: Users },
+  { id: 'strategy', name: 'Dev Planning', icon: Map },
+  { id: 'content', name: 'Communication', icon: FileText },
+  { id: 'development', name: 'Public Data', icon: Database },
+  { id: 'pitch', name: 'Recommendation', icon: Award },
 ];
 
 const pipeline = [
-  { num: 1, id: 'research', name: 'Research' },
-  { num: 2, id: 'strategy', name: 'Strategy' },
-  { num: 3, id: 'content', name: 'Content', parallel: true },
-  { num: 4, id: 'development', name: 'Development', parallel: true },
-  { num: 5, id: 'pitch', name: 'Pitch', parallel: true },
+  { num: 1, id: 'research', name: 'Citizen Insights' },
+  { num: 2, id: 'strategy', name: 'Dev Planning' },
+  { num: 3, id: 'content', name: 'Communication', parallel: true },
+  { num: 4, id: 'development', name: 'Public Data', parallel: true },
+  { num: 5, id: 'pitch', name: 'Recommendations', parallel: true },
 ];
 
 interface SidebarProps {
@@ -37,7 +37,7 @@ export default function Sidebar({ activeTab, selectedAgent, onSelectAgent, agent
       {/* Header */}
       <div className="px-5 pt-5 pb-4 whitespace-nowrap">
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">
-          AI Workforce
+          Civic AI Agents
         </p>
         <p className="text-[11px] text-slate-400 mt-0.5">
           {activeTab === 'orchestrator' ? 'Orchestrator manages all agents' : 'Select an agent'}
@@ -140,8 +140,8 @@ export default function Sidebar({ activeTab, selectedAgent, onSelectAgent, agent
             <span className="text-xs font-bold text-white">C</span>
           </div>
           <div>
-            <p className="text-xs font-bold text-dark tracking-wide">COMET AGENT</p>
-            <p className="text-[10px] text-slate-400">v2.0 • Premium</p>
+            <p className="text-xs font-bold text-dark tracking-wide">COMET CIVIC</p>
+            <p className="text-[10px] text-slate-400">v2.0 • MP Dashboard</p>
           </div>
         </div>
       </div>

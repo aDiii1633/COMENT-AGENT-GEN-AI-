@@ -50,8 +50,8 @@ export default function DashboardLayout() {
                 <Layers className="w-4 h-4 text-white" />
               </div>
               <div>
-                <p className="text-sm font-bold text-dark leading-none tracking-wide">COMET AGENT</p>
-                <p className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">AI Workforce Platform</p>
+                <p className="text-sm font-bold text-dark leading-none tracking-wide">COMET CIVIC</p>
+                <p className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Civic Intelligence Platform</p>
               </div>
             </div>
           </div>
@@ -66,7 +66,7 @@ export default function DashboardLayout() {
                   : 'text-slate-500 hover:text-slate-700'
               }`}
             >
-              Agent Playground
+              Agent Workspace
             </button>
             <button
               onClick={() => setActiveTab('orchestrator')}
@@ -76,7 +76,7 @@ export default function DashboardLayout() {
                   : 'text-slate-500 hover:text-slate-700'
               }`}
             >
-              Business Orchestrator
+              Civic Orchestrator
             </button>
           </div>
         </header>

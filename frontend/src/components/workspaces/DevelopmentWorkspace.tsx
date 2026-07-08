@@ -1,124 +1,105 @@
 import type { SVGProps } from 'react';
-import { Code2, Download, ExternalLink, Cpu, Layers, FileCode } from 'lucide-react';
+import { Database, ExternalLink, Cpu, Layers, FileCode } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import type { DevelopmentOutput } from '../../types/agents';
+import type { PublicDataIntelligenceOutput } from '../../types/agents';
 
-interface DevelopmentWorkspaceProps {
+interface PublicDataWorkspaceProps {
   data: Record<string, unknown>;
 }
 
-export default function DevelopmentWorkspace({ data }: DevelopmentWorkspaceProps) {
-  const output = data as unknown as DevelopmentOutput;
-
-  const handleDownloadHtml = () => {
-    if (!output.htmlPrototype) return;
-    const blob = new Blob([output.htmlPrototype], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'index.html';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+export default function PublicDataWorkspace({ data }: PublicDataWorkspaceProps) {
+  const output = data as unknown as PublicDataIntelligenceOutput;
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
       
-      {/* Top Banner: HTML Generator */}
+      {/* Top Banner: Data Overview */}
       <div className="bg-sky-50 rounded-2xl border border-sky-100 p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
         <div>
           <h2 className="text-xl font-bold text-sky-900 mb-2 flex items-center gap-2">
-            <Code2 className="w-6 h-6 text-sky-600" /> HTML Landing Page Generator
+            <Database className="w-6 h-6 text-sky-600" /> Public Data Intelligence Dashboard
           </h2>
           <p className="text-sky-700 text-sm">
-            {output.htmlGeneratorText || "Your HTML landing page has been generated and is ready to download."}
+            {output.dataOverview || "Comprehensive analysis of government datasets covering infrastructure, demographics, and public services."}
           </p>
         </div>
-        <button 
-          onClick={handleDownloadHtml}
-          className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold transition-colors shadow-sm shrink-0"
-        >
-          <Download className="w-5 h-5" /> Download HTML
-        </button>
       </div>
 
-      {/* Alternative Build Options Header */}
+      {/* Data Source Integration Header */}
       <div className="flex items-center gap-2 text-slate-800 font-bold text-lg pt-4">
-        <Layers className="w-5 h-5 text-sky-500" /> Alternative Build Options
+        <Layers className="w-5 h-5 text-sky-500" /> Data Source Integration
       </div>
 
-      {/* Lovable & Supabase Cards */}
+      {/* Government Data Portal Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        {/* Lovable */}
+        {/* Government Datasets Portal */}
         <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm flex flex-col hover:border-blue-300 transition-colors relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
             <Cpu className="w-24 h-24" />
           </div>
-          <h3 className="text-xl font-bold text-slate-900 mb-4">Lovable Workflow</h3>
+          <h3 className="text-xl font-bold text-slate-900 mb-4">Government Datasets Portal</h3>
           <p className="text-sm text-slate-600 leading-relaxed flex-1 mb-8">
-            Export these requirements directly into Lovable.dev to automatically generate a functional React frontend within minutes. Best for rapid UI prototyping.
+            Access open government datasets including infrastructure inventories, scheme utilization, budget allocations, and public service records. Integrate directly with PMGSY, JJM, and SBM monitoring dashboards.
           </p>
-          <a href="https://lovable.dev" target="_blank" rel="noreferrer" className="text-sky-600 font-bold text-sm flex items-center gap-1 hover:text-sky-700 transition-colors w-fit">
-            Open Lovable <ExternalLink className="w-4 h-4" />
+          <a href="https://data.gov.in" target="_blank" rel="noreferrer" className="text-sky-600 font-bold text-sm flex items-center gap-1 hover:text-sky-700 transition-colors w-fit">
+            Open Data.gov.in <ExternalLink className="w-4 h-4" />
           </a>
         </div>
 
-        {/* Supabase */}
+        {/* Census & Demographics Portal */}
         <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm flex flex-col hover:border-emerald-300 transition-colors relative overflow-hidden group">
            <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
             <DatabaseIcon className="w-24 h-24" />
           </div>
-          <h3 className="text-xl font-bold text-slate-900 mb-4">Supabase Workflow</h3>
+          <h3 className="text-xl font-bold text-slate-900 mb-4">Census & Demographics Portal</h3>
           <p className="text-sm text-slate-600 leading-relaxed flex-1 mb-8">
-            Use Supabase for instant Postgres database, authentication, and edge functions. Seamlessly integrates with the Lovable frontend for a complete full-stack app.
+            Population demographics, literacy rates, occupation patterns, SC/ST statistics, and household data. Cross-reference with citizen complaints for demographic impact analysis.
           </p>
-          <a href="https://supabase.com" target="_blank" rel="noreferrer" className="text-emerald-600 font-bold text-sm flex items-center gap-1 hover:text-emerald-700 transition-colors w-fit">
-            Open Supabase <ExternalLink className="w-4 h-4" />
+          <a href="https://censusindia.gov.in" target="_blank" rel="noreferrer" className="text-emerald-600 font-bold text-sm flex items-center gap-1 hover:text-emerald-700 transition-colors w-fit">
+            Open Census India <ExternalLink className="w-4 h-4" />
           </a>
         </div>
 
       </div>
 
-      {/* Bottom Grid: Architecture & Stack */}
+      {/* Bottom Grid: Data Pipeline Architecture & Connected Sources */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
         
-        {/* Product Architecture */}
+        {/* Data Pipeline Architecture */}
         <div className="lg:col-span-2 bg-[#1e293b] rounded-2xl p-8 shadow-md relative overflow-hidden">
           <div className="absolute top-0 right-0 p-8 opacity-10">
             <Layers className="w-32 h-32 text-white" />
           </div>
           <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2 relative z-10">
-            <Layers className="w-5 h-5 text-slate-300" /> Product Architecture
+            <Layers className="w-5 h-5 text-slate-300" /> Data Pipeline Architecture
           </h3>
           <p className="text-slate-300 text-sm leading-relaxed relative z-10">
-            {output.architectureDescription || "The platform architecture description goes here."}
+            {output.infrastructureAnalysis || "The data pipeline processes government datasets through ingestion, cleaning, normalization, and cross-referencing stages to produce actionable infrastructure intelligence."}
           </p>
         </div>
 
-        {/* Recommended Stack */}
+        {/* Connected Data Sources */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col">
           <h3 className="text-base font-bold text-slate-900 mb-6 flex items-center gap-2">
-            <Cpu className="w-5 h-5 text-sky-500" /> Recommended Stack
+            <Cpu className="w-5 h-5 text-sky-500" /> Connected Data Sources
           </h3>
           <div className="space-y-4 flex-1">
-            {output.recommendedStack?.map((stack, idx) => (
+            {output.dataSources?.map((source, idx) => (
               <a 
                 key={idx} 
-                href={stack.url || '#'} 
+                href={source.url || '#'} 
                 target="_blank" 
                 rel="noreferrer"
                 className="block group"
               >
                 <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 hover:border-sky-200 hover:bg-sky-50 transition-colors">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-slate-800 group-hover:text-sky-700">{stack.name}</span>
+                    <span className="font-bold text-slate-800 group-hover:text-sky-700">{source.name}</span>
                     <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-600" />
                   </div>
                   <div className="text-xs text-slate-500 font-medium">
-                    {stack.description}
+                    {source.description}
                   </div>
                 </div>
               </a>
@@ -128,150 +109,107 @@ export default function DevelopmentWorkspace({ data }: DevelopmentWorkspaceProps
 
       </div>
 
-      {/* Technical Documentation Section */}
-      {(output.folderStructure || output.howToRun || output.installation || output.dependencies || output.technologyStack || output.frontendExplanation || output.backendExplanation || output.databaseExplanation || output.deploymentGuide || output.githubSetup || output.hostingOptions || output.performanceTips || output.optimizationTips || output.securitySuggestions || output.alternativeManualDevelopmentGuide) && (
+      {/* Sector-wise Analysis Section */}
+      {(output.demographicBreakdown || output.schoolsAnalysis || output.roadsAnalysis || output.hospitalsAnalysis || output.populationInsights || output.waterSupplyAnalysis || output.electricityAnalysis || output.sanitationAnalysis || output.connectivityAnalysis || output.budgetUtilization || output.governmentSchemes) && (
         <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm space-y-8 mt-6">
           <h3 className="text-xl font-bold text-slate-900 border-b border-slate-100 pb-4">
-            Technical Implementation Guide
+            Sector-wise Data Analysis
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {output.installation && (
+            {output.demographicBreakdown && (
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Installation & Setup</div>
-                <pre className="text-xs text-slate-800 bg-white p-3 rounded border border-slate-200 overflow-x-auto whitespace-pre-wrap">{output.installation}</pre>
+                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Demographics & Population</div>
+                <p className="text-sm text-slate-600 leading-relaxed">{output.demographicBreakdown}</p>
               </div>
             )}
 
-            {output.howToRun && (
+            {output.roadsAnalysis && (
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <div className="text-xs font-bold text-slate-400 uppercase mb-2">How to Run</div>
-                <pre className="text-xs text-slate-800 bg-white p-3 rounded border border-slate-200 overflow-x-auto whitespace-pre-wrap">{output.howToRun}</pre>
+                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Roads & Connectivity</div>
+                <p className="text-sm text-slate-600 leading-relaxed">{output.roadsAnalysis}</p>
               </div>
             )}
 
-            {output.folderStructure && (
+            {output.schoolsAnalysis && (
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Education Infrastructure</div>
+                <p className="text-sm text-slate-600 leading-relaxed">{output.schoolsAnalysis}</p>
+              </div>
+            )}
+
+            {output.hospitalsAnalysis && (
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Healthcare Facilities</div>
+                <p className="text-sm text-slate-600 leading-relaxed">{output.hospitalsAnalysis}</p>
+              </div>
+            )}
+
+            {output.waterSupplyAnalysis && (
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Water Supply & Irrigation</div>
+                <p className="text-sm text-slate-600 leading-relaxed">{output.waterSupplyAnalysis}</p>
+              </div>
+            )}
+
+            {output.electricityAnalysis && (
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Electricity & Power</div>
+                <p className="text-sm text-slate-600 leading-relaxed">{output.electricityAnalysis}</p>
+              </div>
+            )}
+
+            {output.sanitationAnalysis && (
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Sanitation & Hygiene</div>
+                <p className="text-sm text-slate-600 leading-relaxed">{output.sanitationAnalysis}</p>
+              </div>
+            )}
+
+            {output.connectivityAnalysis && (
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Digital Connectivity</div>
+                <p className="text-sm text-slate-600 leading-relaxed">{output.connectivityAnalysis}</p>
+              </div>
+            )}
+
+            {output.budgetUtilization && (
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Budget Utilization</div>
+                <p className="text-sm text-slate-600 leading-relaxed">{output.budgetUtilization}</p>
+              </div>
+            )}
+
+            {output.governmentSchemes && (
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Active Government Schemes</div>
+                <p className="text-sm text-slate-600 leading-relaxed">{output.governmentSchemes}</p>
+              </div>
+            )}
+
+            {output.populationInsights && (
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 md:col-span-2">
-                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Recommended Folder Structure</div>
-                <pre className="text-xs text-slate-800 bg-white p-3 rounded border border-slate-200 overflow-x-auto whitespace-pre-wrap">{output.folderStructure}</pre>
+                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Population Insights & Trends</div>
+                <p className="text-sm text-slate-700 leading-relaxed">{output.populationInsights}</p>
               </div>
             )}
 
-            {output.dependencies && (
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Key Dependencies</div>
-                <p className="text-sm text-slate-600 leading-relaxed">{output.dependencies}</p>
-              </div>
-            )}
-
-            {output.technologyStack && (
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Technology Stack</div>
-                <p className="text-sm text-slate-600 leading-relaxed">{output.technologyStack}</p>
-              </div>
-            )}
-
-            {output.frontendExplanation && (
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Frontend Architecture</div>
-                <p className="text-sm text-slate-600 leading-relaxed">{output.frontendExplanation}</p>
-              </div>
-            )}
-
-            {output.backendExplanation && (
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Backend Services</div>
-                <p className="text-sm text-slate-600 leading-relaxed">{output.backendExplanation}</p>
-              </div>
-            )}
-
-            {output.databaseExplanation && (
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Database Schema & RLS Rules</div>
-                <p className="text-sm text-slate-600 leading-relaxed">{output.databaseExplanation}</p>
-              </div>
-            )}
-
-            {output.deploymentGuide && (
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Deployment Workflow</div>
-                <p className="text-sm text-slate-600 leading-relaxed">{output.deploymentGuide}</p>
-              </div>
-            )}
-
-            {output.githubSetup && (
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <div className="text-xs font-bold text-slate-400 uppercase mb-2">GitHub CI/CD Configuration</div>
-                <p className="text-sm text-slate-600 leading-relaxed">{output.githubSetup}</p>
-              </div>
-            )}
-
-            {output.hostingOptions && (
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Hosting Options</div>
-                <p className="text-sm text-slate-600 leading-relaxed">{output.hostingOptions}</p>
-              </div>
-            )}
-
-            {output.performanceTips && (
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Performance Optimization</div>
-                <p className="text-sm text-slate-600 leading-relaxed">{output.performanceTips}</p>
-              </div>
-            )}
-
-            {output.optimizationTips && (
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <div className="text-xs font-bold text-slate-400 uppercase mb-2">SEO & Optimization Tips</div>
-                <p className="text-sm text-slate-600 leading-relaxed">{output.optimizationTips}</p>
-              </div>
-            )}
-
-            {output.securitySuggestions && (
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Security Suggestions</div>
-                <p className="text-sm text-slate-600 leading-relaxed">{output.securitySuggestions}</p>
-              </div>
-            )}
-
-            {output.alternativeManualDevelopmentGuide && (
+            {output.geoMappingData && (
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 md:col-span-2">
-                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Manual Alternatives Guide</div>
-                <p className="text-sm text-slate-700 leading-relaxed">{output.alternativeManualDevelopmentGuide}</p>
+                <div className="text-xs font-bold text-slate-400 uppercase mb-2">Geo-Mapping & Spatial Analysis</div>
+                <p className="text-sm text-slate-700 leading-relaxed">{output.geoMappingData}</p>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* NEW SECTION: Live HTML Preview */}
-      {output.htmlPrototype && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-2 shadow-sm flex flex-col mt-8 h-[800px]">
-          <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50 rounded-t-xl">
-            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <Cpu className="w-5 h-5 text-emerald-500" /> Live HTML Prototype Preview
-            </h3>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-red-400"></div>
-              <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-              <div className="w-3 h-3 rounded-full bg-green-400"></div>
-            </div>
-          </div>
-          <iframe 
-            srcDoc={output.htmlPrototype.replace(/\\n/g, '\n')} 
-            className="w-full flex-1 rounded-b-xl"
-            title="Live Prototype"
-            sandbox="allow-scripts allow-same-origin"
-          />
-        </div>
-      )}
-
-      {/* NEW SECTION: Deep Dive Report */}
+      {/* Deep Dive Report */}
       {output.detailedReport && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 mt-8">
           <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4">
             <FileCode className="w-6 h-6 text-indigo-500" />
-            <h3 className="text-2xl font-bold text-slate-900">Comprehensive Development Guide</h3>
+            <h3 className="text-2xl font-bold text-slate-900">Comprehensive Public Data Report</h3>
           </div>
           <div className="prose prose-slate max-w-none prose-headings:text-indigo-900 prose-a:text-indigo-600">
             <ReactMarkdown>{output.detailedReport}</ReactMarkdown>
